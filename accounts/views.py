@@ -44,12 +44,15 @@ def register(request):
                 f'Welcome to Livriha!\n\nPlease click the link below to verify your email and activate your account:\n{verification_url}\n\nThank you!',
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
-                fail_silently=True
+                fail_silently=False
             )
+            messages.success(request, 'Registration successful! Please check your email to verify your account.')
         except Exception as e:
             print(f"Email sending failed: {e}")
+            messages.warning(request, f'Registration successful! However, email verification failed. Please contact support.')
         
         messages.success(request, 'Registration successful! Check your email to verify your account before logging in.')
+        return redirect('login')
         return redirect('login')
     
     return render(request, 'accounts/register.html')
