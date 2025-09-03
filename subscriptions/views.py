@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from .models import SubscriptionPlan, Subscription, PaymentConfirmation
 from .forms import PaymentForm
 
@@ -105,3 +107,42 @@ def activate_subscription(request, payment_id):
     
     messages.success(request, f'Subscription activated for {payment.user.username}')
     return redirect('admin_dashboard')
+
+@login_required
+def confirm_payment(request, plan_id):
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+    
+    if request.method == 'POST':
+        # Create payment confirmation
+        payment = PaymentConfirmation.objects.create(
+            user=request.user,
+            plan=plan,
+            binance_user=request.user.username,
+            binance_email=request.user.email,
+            amount=plan.price
+        )
+        
+        # Send email to admin
+        try:
+            send_mail(
+                subject=f'Payment Complete - {request.user.username}',
+                message=f'''
+Payment Confirmation:
+- User: {request.user.username}
+- Email: {request.user.email}
+- Plan: {plan.get_name_display()}
+- Amount: ${plan.price}
+- Date: {payment.created_at}
+
+Please verify payment and activate subscription in admin dashboard.
+                ''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=['protechdza@gmail.com'],
+                fail_silently=True,
+            )
+        except:
+            pass
+        
+        messages.success(request, 'Payment confirmation sent! Your subscription will be activated once verified.')
+    
+    return redirect('subscription_plans')
