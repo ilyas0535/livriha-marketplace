@@ -5,13 +5,13 @@
 <!-- Hero Section -->
 <div class="hero-section bg-gradient text-white text-center py-5 mb-5 rounded">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-3" data-translate="Welcome to Livriha">Welcome to Livriha</h1>
-        <p class="lead mb-4" data-translate="Your Ultimate Multi-Vendor Marketplace">Your Ultimate Multi-Vendor Marketplace</p>
-        <p class="fs-5 mb-4" data-translate="Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.">Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.</p>
+        <h1 class="display-4 fw-bold mb-3">Welcome to Livriha</h1>
+        <p class="lead mb-4">Your Ultimate Multi-Vendor Marketplace</p>
+        <p class="fs-5 mb-4">Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.</p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="#products" class="btn btn-light btn-lg px-4" data-translate="Start Shopping">Start Shopping</a>
+            <a href="#products" class="btn btn-light btn-lg px-4">Start Shopping</a>
             {% if not user.is_authenticated %}
-                <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-4" data-translate="Join as Seller">Join as Seller</a>
+                <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-4">Join as Seller</a>
             {% endif %}
         </div>
     </div>
