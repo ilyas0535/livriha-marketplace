@@ -92,9 +92,9 @@
                     {% if LANGUAGE_CODE == 'fr' %}FR{% elif LANGUAGE_CODE == 'ar' %}AR{% else %}EN{% endif %}
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/en/">English</a></li>
-                    <li><a class="dropdown-item" href="/fr/">Français</a></li>
-                    <li><a class="dropdown-item" href="/ar/">العربية</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="setLanguage('en')">English</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="setLanguage('fr')">Français</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="setLanguage('ar')">العربية</a></li>
                 </ul>
             </div>
             
@@ -126,7 +126,7 @@
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" style="width: 350px; max-height: 400px; overflow-y: auto;">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            <li><h6 class="dropdown-header" data-translate="Notifications">Notifications</h6></li>
                             <div id="notification-list">
                                 <!-- Notifications will be loaded here -->
                             </div>
@@ -162,22 +162,34 @@
         // Translation system
         const translations = {
             'en': {
-                'Search': 'Search', 'Search...': 'Search...', 'Dashboard': 'Dashboard',
-                'Wishlist': 'Wishlist', 'Login': 'Login', 'Register': 'Register', 'Logout': 'Logout'
+                'Search': 'Search', 'Search...': 'Search...', 'Dashboard': 'Dashboard', 'Wishlist': 'Wishlist', 
+                'Login': 'Login', 'Register': 'Register', 'Logout': 'Logout', 'Home': 'Home', 'Cart': 'Cart',
+                'Products': 'Products', 'Orders': 'Orders', 'Shop': 'Shop', 'Price': 'Price', 'Add to Cart': 'Add to Cart',
+                'Buy Now': 'Buy Now', 'Create Shop': 'Create Shop', 'My Shop': 'My Shop', 'Edit Product': 'Edit Product',
+                'Add Product': 'Add Product', 'View Shop': 'View Shop', 'Notifications': 'Notifications'
             },
             'fr': {
-                'Search': 'Rechercher', 'Search...': 'Rechercher...', 'Dashboard': 'Tableau de bord',
-                'Wishlist': 'Liste de souhaits', 'Login': 'Connexion', 'Register': "S'inscrire", 'Logout': 'Déconnexion'
+                'Search': 'Rechercher', 'Search...': 'Rechercher...', 'Dashboard': 'Tableau de bord', 'Wishlist': 'Liste de souhaits',
+                'Login': 'Connexion', 'Register': "S'inscrire", 'Logout': 'Déconnexion', 'Home': 'Accueil', 'Cart': 'Panier',
+                'Products': 'Produits', 'Orders': 'Commandes', 'Shop': 'Boutique', 'Price': 'Prix', 'Add to Cart': 'Ajouter au panier',
+                'Buy Now': 'Acheter maintenant', 'Create Shop': 'Créer une boutique', 'My Shop': 'Ma boutique', 'Edit Product': 'Modifier le produit',
+                'Add Product': 'Ajouter un produit', 'View Shop': 'Voir la boutique', 'Notifications': 'Notifications'
             },
             'ar': {
-                'Search': 'بحث', 'Search...': 'بحث...', 'Dashboard': 'لوحة التحكم',
-                'Wishlist': 'قائمة الأمنيات', 'Login': 'تسجيل الدخول', 'Register': 'إنشاء حساب', 'Logout': 'تسجيل الخروج'
+                'Search': 'بحث', 'Search...': 'بحث...', 'Dashboard': 'لوحة التحكم', 'Wishlist': 'قائمة الأمنيات',
+                'Login': 'تسجيل الدخول', 'Register': 'إنشاء حساب', 'Logout': 'تسجيل الخروج', 'Home': 'الرئيسية', 'Cart': 'السلة',
+                'Products': 'المنتجات', 'Orders': 'الطلبات', 'Shop': 'المتجر', 'Price': 'السعر', 'Add to Cart': 'أضف إلى السلة',
+                'Buy Now': 'اشتري الآن', 'Create Shop': 'إنشاء متجر', 'My Shop': 'متجري', 'Edit Product': 'تعديل المنتج',
+                'Add Product': 'إضافة منتج', 'View Shop': 'عرض المتجر', 'Notifications': 'الإشعارات'
             }
         };
         
-        // Get current language from URL
+        // Get current language from URL or localStorage
         const pathParts = window.location.pathname.split('/');
-        const currentLang = (pathParts[1] && ['en', 'fr', 'ar'].includes(pathParts[1])) ? pathParts[1] : 'en';
+        let currentLang = (pathParts[1] && ['en', 'fr', 'ar'].includes(pathParts[1])) ? pathParts[1] : localStorage.getItem('selectedLanguage') || 'en';
+        
+        // Save language preference
+        localStorage.setItem('selectedLanguage', currentLang);
         
         // Translate page on load
         document.addEventListener('DOMContentLoaded', function() {
@@ -197,8 +209,29 @@
             if (currentLang === 'ar') {
                 document.body.style.direction = 'rtl';
                 document.body.style.textAlign = 'right';
+            } else {
+                document.body.style.direction = 'ltr';
+                document.body.style.textAlign = 'left';
             }
         });
+        
+        // Language switcher function
+        function setLanguage(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            
+            // Update current page URL
+            const currentPath = window.location.pathname;
+            const pathParts = currentPath.split('/').filter(part => part !== '');
+            
+            // Remove existing language prefix
+            if (pathParts.length > 0 && ['en', 'fr', 'ar'].includes(pathParts[0])) {
+                pathParts.shift();
+            }
+            
+            // Add new language prefix
+            const newPath = lang === 'en' ? '/' + pathParts.join('/') : '/' + lang + '/' + pathParts.join('/');
+            window.location.href = newPath || '/';
+        }
     </script>
     <script>
         // Initialize tooltips
