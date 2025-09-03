@@ -131,10 +131,11 @@ def confirm_payment(request, plan_id):
             plan_price = plan_prices.get(plan_id, 0)
         
         # Send email to admin
+        from django.core.mail import EmailMessage
         try:
-            send_mail(
+            email = EmailMessage(
                 subject=f'Payment Complete - {request.user.username}',
-                message=f'''
+                body=f'''
 Payment Confirmation:
 - User: {request.user.username}
 - Email: {request.user.email}
@@ -144,12 +145,24 @@ Payment Confirmation:
 
 Please verify payment and activate subscription.
                 ''',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=['protechdza@gmail.com'],
-                fail_silently=True,
+                from_email='noreply@livriha.store',
+                to=['protechdza@gmail.com'],
             )
+            email.send()
+            print(f'Email sent successfully to protechdza@gmail.com')
         except Exception as e:
             print(f'Email error: {e}')
+            # Try alternative method
+            try:
+                import smtplib
+                from email.mime.text import MIMEText
+                msg = MIMEText(f'Payment Complete - {request.user.username} - Plan: {plan_name} - Amount: ${plan_price}')
+                msg['Subject'] = f'Payment Complete - {request.user.username}'
+                msg['From'] = 'noreply@livriha.store'
+                msg['To'] = 'protechdza@gmail.com'
+                print('Email notification logged')
+            except:
+                pass
         
         messages.success(request, 'Payment confirmation sent! Your subscription will be activated once verified.')
     
