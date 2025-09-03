@@ -142,17 +142,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Email configuration - Gmail with SSL
+# Email configuration - Brevo (free: 300 emails/day)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'protechdza@gmail.com'
-EMAIL_HOST_PASSWORD = 'pnbp msof iagp udzz'
+EMAIL_HOST = 'smtp-relay.brevo.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '9635eb001@smtp-brevo.com'
+EMAIL_HOST_PASSWORD = 'dsPwaC1NtWHLj27y'
 EMAIL_TIMEOUT = 30
-DEFAULT_FROM_EMAIL = 'protechdza@gmail.com'
-SERVER_EMAIL = 'protechdza@gmail.com'
+DEFAULT_FROM_EMAIL = 'noreply@livriha.store'
+SERVER_EMAIL = 'noreply@livriha.store'
 
 AUTH_USER_MODEL = 'accounts.User'
 
