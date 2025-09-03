@@ -85,20 +85,8 @@
                 Livriha
             </a>
             
-            <!-- Language Switcher -->
-            <div class="dropdown me-3">
-                <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-globe"></i> <span id="current-lang">EN</span>
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('en')">English</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('fr')">Français</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('ar')">العربية</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('es')">Español</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('de')">Deutsch</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="translatePage('zh')">中文</a></li>
-                </ul>
-            </div>
+            <!-- Google Translate Widget -->
+            <div id="google_translate_element" class="me-3"></div>
             
 
             
@@ -163,34 +151,37 @@
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/cart.js' %}"></script>
     
-    <script>
-        function translatePage(langCode) {
-            localStorage.setItem('selectedLanguage', langCode);
-            updateCurrentLangDisplay();
-            
-            if (langCode === 'en') {
-                location.reload();
-                return;
-            }
-            
-            // Use Google Translate redirect method
-            const currentUrl = window.location.href;
-            const translateUrl = `https://translate.google.com/translate?sl=en&tl=${langCode}&u=${encodeURIComponent(currentUrl)}`;
-            window.location.href = translateUrl;
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,fr,ar,es,de,zh,pt,it,ru,ja',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
         }
-        
-        function updateCurrentLangDisplay() {
-            const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-            const langNames = {
-                'en': 'EN', 'fr': 'FR', 'ar': 'AR', 'es': 'ES', 'de': 'DE', 'zh': 'ZH'
-            };
-            document.getElementById('current-lang').textContent = langNames[savedLang] || 'EN';
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentLangDisplay();
-        });
     </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    
+    <style>
+        /* Style Google Translate widget */
+        .goog-te-gadget {
+            font-family: inherit !important;
+            font-size: 14px !important;
+        }
+        .goog-te-gadget .goog-te-combo {
+            background: rgba(255,255,255,0.1) !important;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            color: white !important;
+            border-radius: 4px !important;
+            padding: 4px 8px !important;
+        }
+        .goog-te-gadget .goog-te-combo option {
+            background: #333 !important;
+            color: white !important;
+        }
+        .goog-te-banner-frame { display: none !important; }
+        body { top: 0 !important; }
+    </style>
 
     <script>
         // Initialize tooltips
