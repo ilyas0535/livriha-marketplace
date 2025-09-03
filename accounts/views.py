@@ -11,6 +11,8 @@ from shops.models import Shop
 from orders.models import Order, Notification
 from products.models import Product
 import uuid
+import requests
+import os
 
 def register(request):
     if request.method == 'POST':
@@ -37,23 +39,36 @@ def register(request):
         user.verification_token = token
         user.save()
         
-        # Try to send email, but don't fail registration if it doesn't work
+        # Send email using Brevo API
         verification_url = request.build_absolute_uri(reverse('verify_email', args=[token]))
         email_sent = False
         
         try:
-            send_mail(
-                'Verify your email - Livriha',
-                f'Welcome to Livriha!\n\nPlease click the link below to verify your email and activate your account:\n{verification_url}\n\nThank you!',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False
-            )
-            email_sent = True
+            # Use Brevo API instead of SMTP
+            api_url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "accept": "application/json",
+                "api-key": os.environ.get('BREVO_API_KEY', 'your-brevo-api-key'),
+                "content-type": "application/json"
+            }
+            
+            payload = {
+                "sender": {"name": "Livriha", "email": "noreply@livriha.store"},
+                "to": [{"email": email}],
+                "subject": "Verify your email - Livriha",
+                "htmlContent": f"<p>Welcome to Livriha!</p><p>Please click the link below to verify your email and activate your account:</p><p><a href='{verification_url}'>Verify Email</a></p><p>Thank you!</p>"
+            }
+            
+            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+            if response.status_code == 201:
+                email_sent = True
+            else:
+                print(f"Brevo API failed: {response.status_code} - {response.text}")
+                
         except Exception as e:
-            print(f"Email sending failed with Brevo: {e}")
-            # Show the actual error
-            messages.error(request, f'Email failed: {str(e)}')
+            print(f"Email API failed: {e}")
+            
+        if not email_sent:
             # Activate user immediately if email fails
             user.is_active = True
             user.email_verified = True
