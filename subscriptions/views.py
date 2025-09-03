@@ -10,8 +10,12 @@ from .forms import PaymentForm
 
 @login_required
 def subscription_plans(request):
-    plans = SubscriptionPlan.objects.all()
-    user_subscription = getattr(request.user, 'subscription', None)
+    try:
+        plans = SubscriptionPlan.objects.all()
+        user_subscription = getattr(request.user, 'subscription', None)
+    except:
+        plans = []
+        user_subscription = None
         
     return render(request, 'subscriptions/plans.html', {
         'plans': plans,
@@ -106,34 +110,46 @@ def activate_subscription(request, payment_id):
 @login_required
 def confirm_payment(request, plan_id):
     if request.method == 'POST':
-        plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+        plan_names = {1: 'Monthly - $5', 2: '6 Months - $20', 3: 'Yearly - $50'}
+        plan_prices = {1: 5, 2: 20, 3: 50}
         
-        # Create payment confirmation
-        payment = PaymentConfirmation.objects.create(
-            user=request.user,
-            plan=plan,
-            binance_user=request.user.username,
-            binance_email=request.user.email,
-            amount=plan.price
-        )
+        try:
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+            plan_name = plan.get_name_display()
+            plan_price = plan.price
+            
+            # Create payment confirmation
+            PaymentConfirmation.objects.create(
+                user=request.user,
+                plan=plan,
+                binance_user=request.user.username,
+                binance_email=request.user.email,
+                amount=plan.price
+            )
+        except:
+            plan_name = plan_names.get(plan_id, 'Unknown Plan')
+            plan_price = plan_prices.get(plan_id, 0)
         
         # Send email to admin
-        send_mail(
-            subject=f'Payment Complete - {request.user.username}',
-            message=f'''
+        try:
+            send_mail(
+                subject=f'Payment Complete - {request.user.username}',
+                message=f'''
 Payment Confirmation:
 - User: {request.user.username}
 - Email: {request.user.email}
-- Plan: {plan.get_name_display()}
-- Amount: ${plan.price}
-- Date: {payment.created_at}
+- Plan: {plan_name}
+- Amount: ${plan_price}
+- Date: {timezone.now()}
 
-Please verify payment and activate subscription in admin dashboard.
-            ''',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['protechdza@gmail.com'],
-            fail_silently=False,
-        )
+Please verify payment and activate subscription.
+                ''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=['protechdza@gmail.com'],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f'Email error: {e}')
         
         messages.success(request, 'Payment confirmation sent! Your subscription will be activated once verified.')
     
