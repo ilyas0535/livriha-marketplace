@@ -110,17 +110,29 @@ def activate_subscription(request, payment_id):
 
 @login_required
 def confirm_payment(request, plan_id):
-    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
-    
     if request.method == 'POST':
-        # Create payment confirmation
-        payment = PaymentConfirmation.objects.create(
-            user=request.user,
-            plan=plan,
-            binance_user=request.user.username,
-            binance_email=request.user.email,
-            amount=plan.price
-        )
+        # Handle fallback plans
+        plan_names = {1: 'Monthly - $5', 2: '6 Months - $20', 3: 'Yearly - $50'}
+        plan_prices = {1: 5, 2: 20, 3: 50}
+        
+        plan_name = plan_names.get(plan_id, 'Unknown Plan')
+        plan_price = plan_prices.get(plan_id, 0)
+        
+        try:
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+            plan_name = plan.get_name_display()
+            plan_price = plan.price
+            
+            # Create payment confirmation
+            PaymentConfirmation.objects.create(
+                user=request.user,
+                plan=plan,
+                binance_user=request.user.username,
+                binance_email=request.user.email,
+                amount=plan.price
+            )
+        except:
+            pass
         
         # Send email to admin
         try:
@@ -130,11 +142,11 @@ def confirm_payment(request, plan_id):
 Payment Confirmation:
 - User: {request.user.username}
 - Email: {request.user.email}
-- Plan: {plan.get_name_display()}
-- Amount: ${plan.price}
-- Date: {payment.created_at}
+- Plan: {plan_name}
+- Amount: ${plan_price}
+- Date: {timezone.now()}
 
-Please verify payment and activate subscription in admin dashboard.
+Please verify payment and activate subscription.
                 ''',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=['protechdza@gmail.com'],
