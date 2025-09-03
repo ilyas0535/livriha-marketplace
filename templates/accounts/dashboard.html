@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+{% if user.is_seller %}
+    {% if shop %}
+        <div class="d-flex gap-3 mb-4">
+            <a href="{% url 'manage_products' %}" class="btn btn-success">Manage Products</a>
+            <a href="{% url 'add_product' %}" class="btn btn-primary">Add Product</a>
+            <a href="{% url 'shop_settings' %}" class="btn btn-info">Shop Settings</a>
+            <a href="{% url 'shop_statistics' %}" class="btn btn-warning"><i class="fas fa-chart-line"></i> Show Statistics</a>
+        </div>
+
+        <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Recent Orders</h4>
+                <form method="get" class="d-flex gap-2">
+                    <input type="text" name="search" class="form-control" placeholder="Search by ID or customer name" value="{{ search_query }}" style="width: 200px;">
+                    <select name="status" class="form-select" style="width: 150px;">
+                        <option value="">All Status</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary">Filter</button>
+                </form>
+            </div>
+            {% for order in orders %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#order{{ order.order_number }}" style="cursor: pointer;">
+                    <h6 class="mb-0">Order #{{ order.order_number }} - ${{ order.total_amount }} - {{ order.created_at|date:"M d, Y" }}</h6>
+                    <div>
+                        <span class="badge bg-{% if order.status == 'confirmed' %}success{% elif order.status == 'sent' %}info{% elif order.status == 'cancelled' %}danger{% elif order.status == 'returned' %}secondary{% else %}warning{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                        <i class="fas fa-info-circle ms-2" 
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="top" 
+                           title="{% for history in order.status_history.all %}{{ history.status|title }}: {{ history.changed_at|date:'M d, Y H:i' }}{% if not forloop.last %} | {% endif %}{% endfor %}"
+                           style="cursor: help; color: #6c757d;"></i>
+                        <i class="fas fa-chevron-down ms-2"></i>
+                    </div>
+                </div>
+                <div class="collapse" id="order{{ order.order_number }}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Customer Information:</h6>
+                                <p><strong>Name:</strong> {{ order.customer_name }}<br>
+                                <strong>Email:</strong> {{ order.customer_email }}<br>
+                                <strong>Phone:</strong> {{ order.customer_phone }}<br>
+                                <strong>Address:</strong> {{ order.customer_address }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Order Items:</h6>
+                                {% for item in order.items.all %}
+                                    <p>{{ item.product.name }} x{{ item.quantity }} - ${{ item.price }}</p>
+                                {% endfor %}
+                                
+                                <h6 class="mt-3">Payment Information:</h6>
+                                <p><strong>Method:</strong> {{ order.payment_method|default:"Not specified" }}</p>
+                                {% if order.payment_proof %}
+                                    <p><strong>Payment Proof:</strong></p>
+                                    <img src="{{ order.payment_proof.url }}" alt="Payment Proof" class="img-thumbnail" style="max-width: 200px;">
+                                    <br><a href="{{ order.payment_proof.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View Full Size</a>
+                                {% else %}
+                                    <p><strong>Payment Proof:</strong> Not uploaded</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Update Status:</h6>
+                            <div class="btn-group" role="group">
+                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="draft">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'draft' %}btn-warning{% else %}btn-outline-warning{% endif %}">Draft</button>
+                                </form>
+                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="confirmed">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'confirmed' %}btn-success{% else %}btn-outline-success{% endif %}">Confirmed</button>
+                                </form>
+                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="sent">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'sent' %}btn-info{% else %}btn-outline-info{% endif %}">Sent</button>
+                                </form>
+                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">Cancelled</button>
+                                </form>
+                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="returned">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'returned' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Returned</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if has_more %}
+                <div class="text-center mt-3">
+                    <a href="?offset={{ offset|add:10 }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline-primary">Show More Orders</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-4">
+            <p><strong>Your shop URL:</strong> <a href="{{ shop.get_absolute_url }}" target="_blank">{{ request.get_host }}{{ shop.get_absolute_url }}</a></p>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <p>You don't have a shop yet. <a href="{% url 'create_shop' %}">Create your shop</a> to start selling!</p>
+        </div>
+    {% endif %}
+{% else %}
+    <!-- Buyer Dashboard -->
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Your Orders</h4>
+            {% for order in orders %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Order #{{ order.order_number }} - {{ order.shop.name }}</h6>
+                        <span class="badge bg-{% if order.status == 'confirmed' %}success{% elif order.status == 'sent' %}info{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="mb-1">${{ order.total_amount }} - {{ order.created_at|date:"M d, Y" }}</p>
+                    <small class="text-muted">{{ order.items.count }} item{{ order.items.count|pluralize }}</small>
+                </div>
+            </div>
+            {% empty %}
+            <p>No orders yet. <a href="{% url 'home' %}">Start shopping!</a></p>
+            {% endfor %}
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Notifications</h6>
+                </div>
+                <div class="card-body">
+                    {% for notification in notifications %}
+                    <div class="alert alert-info alert-sm">
+                        <strong>{{ notification.title }}</strong><br>
+                        <small>{{ notification.message }}</small>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No new notifications</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

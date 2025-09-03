@@ -1,0 +1,10 @@
+<div class="text-warning">
+    {% for i in "12345" %}
+        {% if forloop.counter <= full_stars %}
+            <i class="fas fa-star"></i>
+        {% else %}
+            <i class="far fa-star"></i>
+        {% endif %}
+    {% endfor %}
+    {% if count %}<small class="text-muted">({{ count }})</small>{% endif %}
+</div>

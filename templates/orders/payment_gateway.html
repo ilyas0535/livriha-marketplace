@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Complete Payment</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        {% if payment_method == 'paypal' %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>PayPal Payment</h5>
+                </div>
+                <div class="card-body">
+                    <div id="paypal-button-container"></div>
+                </div>
+            </div>
+            
+            <script src="https://www.paypal.com/sdk/js?client-id={{ shop.paypal_client_id }}&currency=USD&intent=capture"></script>
+            <script>
+                paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: '{{ total_amount }}'
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            window.location.href = '/orders/payment-success/{{ order_id }}/';
+                        });
+                    }
+                }).render('#paypal-button-container');
+            </script>
+            
+        {% elif payment_method == 'credit_card' %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Credit Card Payment</h5>
+                </div>
+                <div class="card-body">
+                    <form id="payment-form">
+                        <div id="card-element">
+                            <!-- Stripe Elements will create form elements here -->
+                        </div>
+                        <button id="submit-payment" class="btn btn-primary mt-3">Pay ${{ total_amount }}</button>
+                    </form>
+                </div>
+            </div>
+            
+            <script src="https://js.stripe.com/v3/"></script>
+            <script>
+                const stripe = Stripe('{{ shop.stripe_public_key }}');
+                const elements = stripe.elements();
+                const cardElement = elements.create('card');
+                cardElement.mount('#card-element');
+                
+                document.getElementById('submit-payment').addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    
+                    const {token, error} = await stripe.createToken(cardElement);
+                    
+                    if (error) {
+                        console.error(error);
+                    } else {
+                        // Send token to server
+                        fetch('/orders/process-stripe-payment/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            },
+                            body: JSON.stringify({
+                                token: token.id,
+                                order_id: '{{ order_id }}',
+                                amount: '{{ total_amount }}'
+                            })
+                        }).then(response => {
+                            if (response.ok) {
+                                window.location.href = '/orders/payment-success/{{ order_id }}/';
+                            }
+                        });
+                    }
+                });
+            </script>
+            
+        {% elif payment_method == 'bank_transfer' %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Bank Transfer</h5>
+                </div>
+                <div class="card-body">
+                    <p>Please transfer <strong>${{ total_amount }}</strong> to the following account:</p>
+                    <pre>{{ shop.bank_account_info }}</pre>
+                    <p class="mt-3">Reference: Order #{{ order_id }}</p>
+                    
+                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_payment_proof' order_id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Upload Payment Proof (Receipt/Screenshot)</label>
+                            <input type="file" name="payment_proof" class="form-control" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Upload Proof & Confirm Payment</button>
+                    </form>
+                </div>
+            </div>
+            
+        {% elif payment_method == 'cash_on_delivery' %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cash on Delivery</h5>
+                </div>
+                <div class="card-body">
+                    <p>You will pay <strong>${{ total_amount }}</strong> when your order is delivered.</p>
+                    <p>Your order has been confirmed and will be processed shortly.</p>
+                    <a href="{% url 'payment_success' order_id %}" class="btn btn-success">Confirm Order</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Upload Payment Proof</h5>
+                </div>
+                <div class="card-body">
+                    <p>Please upload proof of your payment for verification.</p>
+                    
+                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_payment_proof' order_id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Payment Proof (Receipt/Screenshot)</label>
+                            <input type="file" name="payment_proof" class="form-control" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Upload Proof</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Order #{{ order_id }}</strong></p>
+                <p><strong>Total: ${{ total_amount }}</strong></p>
+                <p><strong>Payment Method:</strong> {{ payment_method|title }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}

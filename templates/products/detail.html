@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <!-- Product Images -->
+        {% if product.images.all %}
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in product.images.all %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" style="height: 400px; object-fit: cover; cursor: pointer;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if product.images.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+        <h1>{{ product.name }}</h1>
+        <p class="text-muted">by <a href="{{ product.shop.get_absolute_url }}" class="text-decoration-none">{{ product.shop.name }}</a></p>
+        
+        <!-- Rating -->
+        {% if product.average_rating > 0 %}
+            <div class="text-warning mb-3">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= product.average_rating %}
+                        <i class="fas fa-star" style="font-size: 16px;"></i>
+                    {% else %}
+                        <i class="far fa-star" style="font-size: 16px;"></i>
+                    {% endif %}
+                {% endfor %}
+                <span class="text-muted">({{ product.rating_count }} reviews)</span>
+            </div>
+        {% endif %}
+        
+        <!-- Price -->
+        <div class="mb-3">
+            {% if product.is_on_sale %}
+                <span class="text-muted text-decoration-line-through h5">${{ product.old_price }}</span>
+                <span class="text-danger fw-bold h4">${{ product.price }}</span>
+            {% else %}
+                <span class="fw-bold h4">${{ product.price }}</span>
+            {% endif %}
+        </div>
+        
+        <!-- Description -->
+        <div class="mb-4">
+            <h5>Description</h5>
+            <p>{{ product.description }}</p>
+        </div>
+        
+        <!-- Stock -->
+        <div class="mb-3">
+            {% if product.is_out_of_stock %}
+                <span class="badge bg-danger">Out of Stock</span>
+            {% else %}
+                <span class="text-success">{{ product.quantity }} in stock</span>
+            {% endif %}
+        </div>
+        
+        <!-- Actions -->
+        <div class="d-flex gap-2 mb-4">
+            {% if not product.is_out_of_stock %}
+                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to Cart</a>
+                <a href="{% url 'buy_now' product.id %}" class="btn btn-success">Buy Now</a>
+            {% endif %}
+            {% if user.is_authenticated %}
+                <a href="{% url 'add_to_wishlist' product.id %}" class="btn btn-outline-secondary">♡ Wishlist</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Customer Reviews</h3>
+        
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title">{{ review.user.username }}</h6>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star" style="font-size: 14px;"></i>
+                                    {% else %}
+                                        <i class="far fa-star" style="font-size: 14px;"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if review.comment %}
+                                <p class="card-text">{{ review.comment }}</p>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ product.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="imageModalCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner" id="modalCarouselInner">
+                        <!-- Images will be loaded here -->
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#imageModalCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#imageModalCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(productId, startIndex) {
+    const product = document.querySelector('#productCarousel');
+    const images = product.querySelectorAll('.carousel-item img');
+    const modalInner = document.getElementById('modalCarouselInner');
+    
+    modalInner.innerHTML = '';
+    
+    images.forEach((img, index) => {
+        const div = document.createElement('div');
+        div.className = `carousel-item ${index === startIndex ? 'active' : ''}`;
+        div.innerHTML = `<img src="${img.src}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;">`;
+        modalInner.appendChild(div);
+    });
+    
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+}
+</script>
+
+{% endblock %}

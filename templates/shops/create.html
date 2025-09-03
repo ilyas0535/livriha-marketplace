@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Create Your Shop</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Shop Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Logo</label>
+                <input type="file" name="logo" class="form-control" accept="image/*">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Checkout Methods (Select all that apply)</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkout_methods" value="cash_on_delivery" id="cod">
+                    <label class="form-check-label" for="cod">Cash on Delivery</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkout_methods" value="bank_transfer" id="bank">
+                    <label class="form-check-label" for="bank">Bank Transfer</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkout_methods" value="paypal" id="paypal">
+                    <label class="form-check-label" for="paypal">PayPal</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkout_methods" value="credit_card" id="card">
+                    <label class="form-check-label" for="card">Credit Card</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Shop</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

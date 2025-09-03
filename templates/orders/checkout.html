@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Checkout</h2>
+
+{% if shops_items %}
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Delivery Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="full_name" class="form-control" value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Delivery Address</label>
+                    <textarea name="address" class="form-control" rows="3" required></textarea>
+                </div>
+            </div>
+        </div>
+
+        {% for shop, items in shops_items.items %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Order from {{ shop.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>${{ item.product.price }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ item.product.price|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Payment Method:</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method_{{ shop.id }}" value="cash_on_delivery" id="cod_{{ shop.id }}" checked>
+                            <label class="form-check-label" for="cod_{{ shop.id }}">
+                                Cash on Delivery
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="text-end">
+            <a href="{% url 'cart' %}" class="btn btn-secondary">Back to Cart</a>
+            <button type="submit" class="btn btn-success">Place Order</button>
+        </div>
+    </form>
+{% else %}
+    <div class="text-center">
+        <p>Your cart is empty.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+    </div>
+{% endif %}
+{% endblock %}

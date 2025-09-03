@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Production Payment Gateway Setup Guide</h2>
+
+<div class="alert alert-warning">
+    <strong>Important:</strong> This guide is for setting up REAL payment processing. Only proceed if you have a legitimate business and proper authorization to receive payments.
+</div>
+
+<div class="accordion" id="paymentGuide">
+    <!-- PayPal Setup -->
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#paypalSetup">
+                PayPal Business Account Setup
+            </button>
+        </h2>
+        <div id="paypalSetup" class="accordion-collapse collapse show">
+            <div class="accordion-body">
+                <h5>Step 1: Create PayPal Business Account</h5>
+                <ol>
+                    <li>Go to <a href="https://www.paypal.com/business" target="_blank">PayPal Business</a></li>
+                    <li>Click "Get Started" and select "Business Account"</li>
+                    <li>Complete business verification with legal documents</li>
+                    <li>Link your business bank account</li>
+                </ol>
+                
+                <h5>Step 2: Create Live Application</h5>
+                <ol>
+                    <li>Go to <a href="https://developer.paypal.com" target="_blank">PayPal Developer</a></li>
+                    <li>Log in with your business account</li>
+                    <li>Click "Create App"</li>
+                    <li>Select "Live" environment (not Sandbox)</li>
+                    <li>Copy your Live Client ID and Secret</li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <strong>Requirements:</strong> Business verification, bank account linking, and compliance with PayPal's terms of service.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stripe Setup -->
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#stripeSetup">
+                Stripe Account Setup
+            </button>
+        </h2>
+        <div id="stripeSetup" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <h5>Step 1: Create Stripe Account</h5>
+                <ol>
+                    <li>Go to <a href="https://stripe.com" target="_blank">Stripe.com</a></li>
+                    <li>Click "Start now" and create account</li>
+                    <li>Complete business verification process</li>
+                    <li>Provide tax information and bank details</li>
+                </ol>
+                
+                <h5>Step 2: Get Live API Keys</h5>
+                <ol>
+                    <li>Go to Dashboard → Developers → API Keys</li>
+                    <li>Toggle "View test data" OFF to see live keys</li>
+                    <li>Copy Publishable key (pk_live_...)</li>
+                    <li>Reveal and copy Secret key (sk_live_...)</li>
+                </ol>
+                
+                <div class="alert alert-warning">
+                    <strong>Security:</strong> Never share your secret key. Store it securely and use HTTPS only.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Transfer Setup -->
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bankSetup">
+                Bank Transfer Setup
+            </button>
+        </h2>
+        <div id="bankSetup" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <h5>Required Information</h5>
+                <ul>
+                    <li><strong>Bank Name:</strong> Full legal name of your bank</li>
+                    <li><strong>Account Holder:</strong> Your legal business name</li>
+                    <li><strong>Account Number:</strong> Your business account number</li>
+                    <li><strong>Routing Number:</strong> Bank's routing number</li>
+                    <li><strong>SWIFT Code:</strong> For international transfers</li>
+                    <li><strong>Bank Address:</strong> Physical address of bank branch</li>
+                </ul>
+                
+                <div class="alert alert-danger">
+                    <strong>Legal Notice:</strong> Only provide account information for accounts you legally own and are authorized to receive business payments into.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal Compliance -->
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#legalSetup">
+                Legal & Compliance Requirements
+            </button>
+        </h2>
+        <div id="legalSetup" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <h5>Business Requirements</h5>
+                <ul>
+                    <li>Valid business registration/license</li>
+                    <li>Tax identification number</li>
+                    <li>Business bank account</li>
+                    <li>Compliance with local e-commerce laws</li>
+                </ul>
+                
+                <h5>Platform Compliance</h5>
+                <ul>
+                    <li>PayPal Acceptable Use Policy</li>
+                    <li>Stripe Terms of Service</li>
+                    <li>PCI DSS compliance for card processing</li>
+                    <li>Data protection regulations (GDPR, etc.)</li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <strong>Recommendation:</strong> Consult with legal and financial advisors before processing real payments.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'shop_settings' %}" class="btn btn-primary">Configure Payment Methods</a>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}
