@@ -8,8 +8,14 @@ from .forms import PaymentForm
 
 @login_required
 def subscription_plans(request):
-    plans = SubscriptionPlan.objects.all()
-    user_subscription = getattr(request.user, 'subscription', None)
+    try:
+        plans = SubscriptionPlan.objects.all()
+        user_subscription = getattr(request.user, 'subscription', None)
+    except:
+        # Tables don't exist yet, create default plans
+        plans = []
+        user_subscription = None
+        
     return render(request, 'subscriptions/plans.html', {
         'plans': plans,
         'user_subscription': user_subscription
