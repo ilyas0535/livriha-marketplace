@@ -1,0 +1,59 @@
+# French translations for Livriha
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+msgid "Home"
+msgstr "Accueil"
+
+msgid "Login"
+msgstr "Connexion"
+
+msgid "Register"
+msgstr "S'inscrire"
+
+msgid "Logout"
+msgstr "Déconnexion"
+
+msgid "Dashboard"
+msgstr "Tableau de bord"
+
+msgid "Cart"
+msgstr "Panier"
+
+msgid "Wishlist"
+msgstr "Liste de souhaits"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Create Free Online Store"
+msgstr "Créer une boutique en ligne gratuite"
+
+msgid "Multi-Vendor E-commerce Platform"
+msgstr "Plateforme e-commerce multi-vendeurs"
+
+msgid "Cash on Delivery"
+msgstr "Paiement à la livraison"
+
+msgid "Start selling online today"
+msgstr "Commencez à vendre en ligne aujourd'hui"
+
+msgid "Products"
+msgstr "Produits"
+
+msgid "Orders"
+msgstr "Commandes"
+
+msgid "Shop"
+msgstr "Boutique"
+
+msgid "Price"
+msgstr "Prix"
+
+msgid "Add to Cart"
+msgstr "Ajouter au panier"
+
+msgid "Buy Now"
+msgstr "Acheter maintenant"

@@ -1,0 +1,59 @@
+# Arabic translations for Livriha
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+msgid "Register"
+msgstr "إنشاء حساب"
+
+msgid "Logout"
+msgstr "تسجيل الخروج"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+msgid "Cart"
+msgstr "السلة"
+
+msgid "Wishlist"
+msgstr "قائمة الأمنيات"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Create Free Online Store"
+msgstr "إنشاء متجر إلكتروني مجاني"
+
+msgid "Multi-Vendor E-commerce Platform"
+msgstr "منصة تجارة إلكترونية متعددة البائعين"
+
+msgid "Cash on Delivery"
+msgstr "الدفع عند الاستلام"
+
+msgid "Start selling online today"
+msgstr "ابدأ البيع عبر الإنترنت اليوم"
+
+msgid "Products"
+msgstr "المنتجات"
+
+msgid "Orders"
+msgstr "الطلبات"
+
+msgid "Shop"
+msgstr "المتجر"
+
+msgid "Price"
+msgstr "السعر"
+
+msgid "Add to Cart"
+msgstr "أضف إلى السلة"
+
+msgid "Buy Now"
+msgstr "اشتري الآن"

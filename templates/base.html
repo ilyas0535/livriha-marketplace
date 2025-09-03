@@ -1,6 +1,7 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
-<html>
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <title>{% block title %}Livriha - Create Free Online Store | Multi-Vendor E-commerce Platform | Créer Boutique Gratuite | إنشاء متجر إلكتروني مجاني{% endblock %}</title>
     <meta charset="utf-8">
@@ -84,6 +85,20 @@
                 <img src="{% static 'site_logo/livriha.png' %}" alt="Livriha" height="40" class="me-2">
                 Livriha
             </a>
+            
+            <!-- Language Switcher -->
+            <div class="dropdown me-3">
+                <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-globe"></i> 
+                    {% if LANGUAGE_CODE == 'fr' %}FR{% elif LANGUAGE_CODE == 'ar' %}AR{% else %}EN{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    {% get_available_languages as LANGUAGES %}
+                    {% for lang_code, lang_name in LANGUAGES %}
+                        <li><a class="dropdown-item" href="/{{ lang_code }}/">{{ lang_name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
             
             <!-- Quick Search -->
             <form class="d-flex me-3" method="get" action="{% url 'home' %}">
