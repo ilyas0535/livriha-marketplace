@@ -168,59 +168,61 @@
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
-                includedLanguages: 'en,fr,ar,es,de,zh,pt,it,ru,ja,ko,hi,tr,nl,sv,da,no,fi,pl,cs,hu,ro,bg,hr,sk,sl,et,lv,lt,mt',
+                includedLanguages: 'en,fr,ar,es,de,zh',
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
+                autoDisplay: false,
+                multilanguagePage: true
             }, 'google_translate_element');
         }
         
         // Load saved language preference
         document.addEventListener('DOMContentLoaded', function() {
-            const savedLang = localStorage.getItem('selectedLanguage');
-            if (savedLang && savedLang !== 'en') {
-                setTimeout(() => {
-                    translatePage(savedLang);
-                }, 1000);
-            }
             updateCurrentLangDisplay();
+            
+            // Wait for Google Translate to fully load
+            setTimeout(() => {
+                const savedLang = localStorage.getItem('selectedLanguage');
+                if (savedLang && savedLang !== 'en') {
+                    translatePage(savedLang);
+                }
+            }, 2000);
         });
         
         function translatePage(langCode) {
             // Save language preference
             localStorage.setItem('selectedLanguage', langCode);
-            
-            if (langCode === 'en') {
-                // Reset to original language
-                const translateFrame = document.querySelector('.goog-te-banner-frame');
-                if (translateFrame) {
-                    const resetButton = translateFrame.contentDocument.querySelector('.goog-te-button button');
-                    if (resetButton) resetButton.click();
-                }
-                location.reload();
-            } else {
-                // Trigger Google Translate
-                const selectElement = document.querySelector('.goog-te-combo');
-                if (selectElement) {
-                    selectElement.value = langCode;
-                    selectElement.dispatchEvent(new Event('change'));
-                } else {
-                    // If Google Translate not loaded yet, wait and try again
-                    setTimeout(() => translatePage(langCode), 500);
-                }
-            }
-            
             updateCurrentLangDisplay();
             
-            // Set RTL for Arabic
-            if (langCode === 'ar') {
-                setTimeout(() => {
-                    document.body.style.direction = 'rtl';
-                    document.body.style.textAlign = 'right';
-                }, 1500);
-            } else {
-                document.body.style.direction = 'ltr';
-                document.body.style.textAlign = 'left';
+            // Wait for Google Translate to load
+            function attemptTranslation() {
+                const selectElement = document.querySelector('.goog-te-combo');
+                if (selectElement) {
+                    if (langCode === 'en') {
+                        selectElement.value = '';
+                    } else {
+                        selectElement.value = langCode;
+                    }
+                    selectElement.dispatchEvent(new Event('change'));
+                    
+                    // Set RTL for Arabic
+                    if (langCode === 'ar') {
+                        setTimeout(() => {
+                            document.body.style.direction = 'rtl';
+                            document.body.style.textAlign = 'right';
+                        }, 2000);
+                    } else {
+                        setTimeout(() => {
+                            document.body.style.direction = 'ltr';
+                            document.body.style.textAlign = 'left';
+                        }, 2000);
+                    }
+                } else {
+                    // Google Translate not ready, try again
+                    setTimeout(attemptTranslation, 100);
+                }
             }
+            
+            attemptTranslation();
         }
         
         function updateCurrentLangDisplay() {
