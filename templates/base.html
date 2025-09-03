@@ -92,7 +92,6 @@
                     {% if LANGUAGE_CODE == 'fr' %}FR{% elif LANGUAGE_CODE == 'ar' %}AR{% else %}EN{% endif %}
                 </button>
                 <ul class="dropdown-menu">
-                    {% get_available_languages as LANGUAGES %}
                     <li><a class="dropdown-item" href="/en/">English</a></li>
                     <li><a class="dropdown-item" href="/fr/">Français</a></li>
                     <li><a class="dropdown-item" href="/ar/">العربية</a></li>
