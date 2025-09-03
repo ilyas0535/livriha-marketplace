@@ -3,6 +3,30 @@ from django.conf import settings
 from django.utils import timezone
 import json
 import requests
+import os
+
+def send_brevo_email(to_email, subject, html_content):
+    """Helper function to send emails via Brevo API"""
+    try:
+        api_url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": os.environ.get('BREVO_API_KEY', 'your-brevo-api-key'),
+            "content-type": "application/json"
+        }
+        
+        payload = {
+            "sender": {"name": "Livriha", "email": "protechdza@gmail.com"},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content
+        }
+        
+        response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+        return response.status_code == 201
+    except Exception as e:
+        print(f"Email sending failed: {e}")
+        return False
 
 def send_browser_notification(user, title, message, order_id=None):
     """Send browser push notification"""
@@ -19,19 +43,10 @@ def send_browser_notification(user, title, message, order_id=None):
     print(f"Browser notification sent to {user.email}: {title} - {message}")
 
 def send_email_notification(to_email, subject, message):
-    """Send email notification"""
-    try:
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[to_email],
-            fail_silently=False,
-        )
-        return True
-    except Exception as e:
-        print(f"Email notification failed: {e}")
-        return False
+    """Send email notification using Brevo API"""
+    # Convert plain text to HTML
+    html_content = message.replace('\n', '<br>')
+    return send_brevo_email(to_email, subject, html_content)
 
 def notify_seller_new_order(order):
     """Notify seller about new order"""

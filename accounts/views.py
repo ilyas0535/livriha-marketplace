@@ -14,6 +14,29 @@ import uuid
 import requests
 import os
 
+def send_brevo_email(to_email, subject, html_content):
+    """Helper function to send emails via Brevo API"""
+    try:
+        api_url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": os.environ.get('BREVO_API_KEY', 'your-brevo-api-key'),
+            "content-type": "application/json"
+        }
+        
+        payload = {
+            "sender": {"name": "Livriha", "email": "protechdza@gmail.com"},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content
+        }
+        
+        response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+        return response.status_code == 201
+    except Exception as e:
+        print(f"Email sending failed: {e}")
+        return False
+
 def register(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -43,31 +66,14 @@ def register(request):
         verification_url = request.build_absolute_uri(reverse('verify_email', args=[token]))
         email_sent = False
         
-        try:
-            # Use Brevo API instead of SMTP
-            api_url = "https://api.brevo.com/v3/smtp/email"
-            headers = {
-                "accept": "application/json",
-                "api-key": os.environ.get('BREVO_API_KEY', 'your-brevo-api-key'),
-                "content-type": "application/json"
-            }
-            
-            payload = {
-                "sender": {"name": "Livriha", "email": "protechdza@gmail.com"},
-                "to": [{"email": email}],
-                "subject": "Verify your email - Livriha",
-                "htmlContent": f"<p>Welcome to Livriha!</p><p>Please click the link below to verify your email and activate your account:</p><p><a href='{verification_url}'>Verify Email</a></p><p>Thank you!</p>"
-            }
-            
-            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
-            if response.status_code == 201:
-                email_sent = True
-                print(f"Email sent successfully to {email}")
-            else:
-                print(f"Brevo API failed: {response.status_code} - {response.text}")
-                
-        except Exception as e:
-            print(f"Email API failed: {e}")
+        # Send verification email
+        html_content = f"<p>Welcome to Livriha!</p><p>Please click the link below to verify your email and activate your account:</p><p><a href='{verification_url}'>Verify Email</a></p><p>Thank you!</p>"
+        email_sent = send_brevo_email(email, "Verify your email - Livriha", html_content)
+        
+        if email_sent:
+            print(f"Email sent successfully to {email}")
+        else:
+            print(f"Email sending failed for {email}")
             
         if not email_sent:
             print(f"Email failed, activating user {email} immediately")
@@ -127,12 +133,10 @@ def forgot_password(request):
             user.save()
             
             reset_url = request.build_absolute_uri(reverse('reset_password', args=[token]))
-            send_mail(
-                'Reset your password - Livriha',
-                f'Click the link below to reset your password:\n{reset_url}\n\nIf you did not request this, please ignore this email.',
-                settings.DEFAULT_FROM_EMAIL,
-                [email]
-            )
+            
+            # Send password reset email
+            html_content = f"<p>Click the link below to reset your password:</p><p><a href='{reset_url}'>Reset Password</a></p><p>If you did not request this, please ignore this email.</p>"
+            send_brevo_email(email, "Reset your password - Livriha", html_content)
             messages.success(request, 'Password reset link sent to your email.')
             return redirect('login')
         except User.DoesNotExist:
