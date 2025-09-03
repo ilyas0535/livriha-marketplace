@@ -62,6 +62,7 @@ def register(request):
             response = requests.post(api_url, json=payload, headers=headers, timeout=10)
             if response.status_code == 201:
                 email_sent = True
+                print(f"Email sent successfully to {email}")
             else:
                 print(f"Brevo API failed: {response.status_code} - {response.text}")
                 
@@ -69,6 +70,7 @@ def register(request):
             print(f"Email API failed: {e}")
             
         if not email_sent:
+            print(f"Email failed, activating user {email} immediately")
             # Activate user immediately if email fails
             user.is_active = True
             user.email_verified = True
@@ -77,7 +79,7 @@ def register(request):
         if email_sent:
             messages.success(request, 'Registration successful! Please check your email to verify your account.')
         else:
-            messages.success(request, 'Registration successful! Email verification temporarily disabled. You can log in now.')
+            messages.success(request, 'Registration successful! Email verification failed, but your account is active. You can log in now.')
         
 
         return redirect('login')
