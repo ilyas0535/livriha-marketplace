@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Purchase {{ plan.get_name_display }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3>${{ plan.price }}</h3>
+                        <p>{{ plan.duration_days }} days</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5>Payment Instructions:</h5>
+                        <ol>
+                            <li>Send <strong>${{ plan.price }}</strong> via Binance Pay to: <strong>protechdzagmail.com</strong></li>
+                            <li>Fill in your Binance details below</li>
+                            <li>Click "Payment Done" to confirm</li>
+                        </ol>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Binance Username</label>
+                            {{ form.binance_user }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Binance Email</label>
+                            {{ form.binance_email }}
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.payment_confirmed }}
+                            <label class="form-check-label">{{ form.payment_confirmed.label }}</label>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Payment Done</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

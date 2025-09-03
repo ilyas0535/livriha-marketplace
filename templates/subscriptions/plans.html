@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Subscription Plans</h2>
+    
+    {% if user_subscription and not user_subscription.is_expired %}
+        <div class="alert alert-success">
+            <h5>Active Subscription</h5>
+            <p>Plan: {{ user_subscription.plan }}</p>
+            <p>Expires: {{ user_subscription.end_date|date:"M d, Y" }}</p>
+            <p>Days remaining: {{ user_subscription.days_until_expiry }}</p>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <h5>No Active Subscription</h5>
+            <p>You need an active subscription to add products and have them visible on the marketplace.</p>
+        </div>
+    {% endif %}
+    
+    <div class="row">
+        {% for plan in plans %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4>{{ plan.get_name_display }}</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h2>${{ plan.price }}</h2>
+                    <p>{{ plan.duration_days }} days</p>
+                    
+                    {% if plan.name == '6months' %}
+                        <p class="text-success">Save $10!</p>
+                    {% elif plan.name == 'yearly' %}
+                        <p class="text-success">Save $20!</p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Binance Pay:</strong></p>
+                        <p>protechdzagmail.com</p>
+                    </div>
+                    
+                    <a href="{% url 'purchase_plan' plan.id %}" class="btn btn-primary">Select Plan</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
