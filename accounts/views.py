@@ -51,7 +51,9 @@ def register(request):
             )
             email_sent = True
         except Exception as e:
-            print(f"Email sending failed: {e}")
+            print(f"Email sending failed with Brevo: {e}")
+            # Show the actual error
+            messages.error(request, f'Email failed: {str(e)}')
             # Activate user immediately if email fails
             user.is_active = True
             user.email_verified = True
