@@ -53,7 +53,7 @@ def register(request):
             }
             
             payload = {
-                "sender": {"name": "Livriha", "email": "noreply@livriha.store"},
+                "sender": {"name": "Livriha", "email": "noreply@brevo.com"},
                 "to": [{"email": email}],
                 "subject": "Verify your email - Livriha",
                 "htmlContent": f"<p>Welcome to Livriha!</p><p>Please click the link below to verify your email and activate your account:</p><p><a href='{verification_url}'>Verify Email</a></p><p>Thank you!</p>"
