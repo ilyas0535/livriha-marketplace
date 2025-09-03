@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+
     'django.middleware.common.CommonMiddleware',
 ] + (['django.middleware.csrf.CsrfViewMiddleware'] if not os.environ.get('DISABLE_CSRF') else []) + [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -75,7 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.i18n',
+
                 'monmagasin.context_processors.translations',
             ],
         },
@@ -129,15 +129,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en'
-LANGUAGES = [
-    ('en', 'English'),
-    ('fr', 'Français'),
-    ('ar', 'العربية'),
-]
-LOCALE_PATHS = [BASE_DIR / 'locale']
-
 TIME_ZONE = 'UTC'
-USE_I18N = True
+USE_I18N = False
 USE_L10N = True
 USE_TZ = True
 
