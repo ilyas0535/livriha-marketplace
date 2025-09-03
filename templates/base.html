@@ -163,97 +163,34 @@
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/cart.js' %}"></script>
     
-    <!-- Google Translate Script -->
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,fr,ar,es,de,zh',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false,
-                multilanguagePage: true
-            }, 'google_translate_element');
-        }
-        
-        // Load saved language preference
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentLangDisplay();
-            
-            // Wait for Google Translate to fully load
-            setTimeout(() => {
-                const savedLang = localStorage.getItem('selectedLanguage');
-                if (savedLang && savedLang !== 'en') {
-                    translatePage(savedLang);
-                }
-            }, 2000);
-        });
-        
+    <script>
         function translatePage(langCode) {
-            // Save language preference
             localStorage.setItem('selectedLanguage', langCode);
             updateCurrentLangDisplay();
             
-            // Wait for Google Translate to load
-            function attemptTranslation() {
-                const selectElement = document.querySelector('.goog-te-combo');
-                if (selectElement) {
-                    if (langCode === 'en') {
-                        selectElement.value = '';
-                    } else {
-                        selectElement.value = langCode;
-                    }
-                    selectElement.dispatchEvent(new Event('change'));
-                    
-                    // Set RTL for Arabic
-                    if (langCode === 'ar') {
-                        setTimeout(() => {
-                            document.body.style.direction = 'rtl';
-                            document.body.style.textAlign = 'right';
-                        }, 2000);
-                    } else {
-                        setTimeout(() => {
-                            document.body.style.direction = 'ltr';
-                            document.body.style.textAlign = 'left';
-                        }, 2000);
-                    }
-                } else {
-                    // Google Translate not ready, try again
-                    setTimeout(attemptTranslation, 100);
-                }
+            if (langCode === 'en') {
+                location.reload();
+                return;
             }
             
-            attemptTranslation();
+            // Use Google Translate redirect method
+            const currentUrl = window.location.href;
+            const translateUrl = `https://translate.google.com/translate?sl=en&tl=${langCode}&u=${encodeURIComponent(currentUrl)}`;
+            window.location.href = translateUrl;
         }
         
         function updateCurrentLangDisplay() {
             const savedLang = localStorage.getItem('selectedLanguage') || 'en';
             const langNames = {
-                'en': 'EN', 'fr': 'FR', 'ar': 'AR', 'es': 'ES', 
-                'de': 'DE', 'zh': 'ZH', 'pt': 'PT', 'it': 'IT',
-                'ru': 'RU', 'ja': 'JA', 'ko': 'KO', 'hi': 'HI'
+                'en': 'EN', 'fr': 'FR', 'ar': 'AR', 'es': 'ES', 'de': 'DE', 'zh': 'ZH'
             };
             document.getElementById('current-lang').textContent = langNames[savedLang] || 'EN';
         }
         
-        // Hide Google Translate widget
-        window.addEventListener('load', function() {
-            const style = document.createElement('style');
-            style.textContent = `
-                #google_translate_element { display: none !important; }
-                .goog-te-banner-frame { display: none !important; }
-                .goog-te-menu-frame { z-index: 9999 !important; }
-                body { top: 0 !important; }
-                .goog-te-balloon-frame { display: none !important; }
-            `;
-            document.head.appendChild(style);
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentLangDisplay();
         });
     </script>
-    
-    <!-- Hidden Google Translate Element -->
-    <div id="google_translate_element" style="display: none;"></div>
-    
-    <!-- Load Google Translate API -->
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
         // Initialize tooltips
