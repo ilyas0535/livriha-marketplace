@@ -166,21 +166,33 @@
                 'Login': 'Login', 'Register': 'Register', 'Logout': 'Logout', 'Home': 'Home', 'Cart': 'Cart',
                 'Products': 'Products', 'Orders': 'Orders', 'Shop': 'Shop', 'Price': 'Price', 'Add to Cart': 'Add to Cart',
                 'Buy Now': 'Buy Now', 'Create Shop': 'Create Shop', 'My Shop': 'My Shop', 'Edit Product': 'Edit Product',
-                'Add Product': 'Add Product', 'View Shop': 'View Shop', 'Notifications': 'Notifications'
+                'Add Product': 'Add Product', 'View Shop': 'View Shop', 'Notifications': 'Notifications',
+                'Welcome to Livriha': 'Welcome to Livriha', 'Your Ultimate Multi-Vendor Marketplace': 'Your Ultimate Multi-Vendor Marketplace',
+                'Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.': 'Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.',
+                'Start Shopping': 'Start Shopping', 'Join as Seller': 'Join as Seller', 'Email': 'Email', 'Password': 'Password',
+                'Username': 'Username', 'Confirm Password': 'Confirm Password', 'I want to sell products': 'I want to sell products'
             },
             'fr': {
                 'Search': 'Rechercher', 'Search...': 'Rechercher...', 'Dashboard': 'Tableau de bord', 'Wishlist': 'Liste de souhaits',
                 'Login': 'Connexion', 'Register': "S'inscrire", 'Logout': 'Déconnexion', 'Home': 'Accueil', 'Cart': 'Panier',
                 'Products': 'Produits', 'Orders': 'Commandes', 'Shop': 'Boutique', 'Price': 'Prix', 'Add to Cart': 'Ajouter au panier',
                 'Buy Now': 'Acheter maintenant', 'Create Shop': 'Créer une boutique', 'My Shop': 'Ma boutique', 'Edit Product': 'Modifier le produit',
-                'Add Product': 'Ajouter un produit', 'View Shop': 'Voir la boutique', 'Notifications': 'Notifications'
+                'Add Product': 'Ajouter un produit', 'View Shop': 'Voir la boutique', 'Notifications': 'Notifications',
+                'Welcome to Livriha': 'Bienvenue sur Livriha', 'Your Ultimate Multi-Vendor Marketplace': 'Votre marché multi-vendeurs ultime',
+                'Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.': 'Découvrez des produits incroyables de vendeurs de confiance du monde entier. Achetez en toute confiance, vendez facilement.',
+                'Start Shopping': 'Commencer à acheter', 'Join as Seller': 'Rejoindre comme vendeur', 'Email': 'E-mail', 'Password': 'Mot de passe',
+                'Username': "Nom d'utilisateur", 'Confirm Password': 'Confirmer le mot de passe', 'I want to sell products': 'Je veux vendre des produits'
             },
             'ar': {
                 'Search': 'بحث', 'Search...': 'بحث...', 'Dashboard': 'لوحة التحكم', 'Wishlist': 'قائمة الأمنيات',
                 'Login': 'تسجيل الدخول', 'Register': 'إنشاء حساب', 'Logout': 'تسجيل الخروج', 'Home': 'الرئيسية', 'Cart': 'السلة',
                 'Products': 'المنتجات', 'Orders': 'الطلبات', 'Shop': 'المتجر', 'Price': 'السعر', 'Add to Cart': 'أضف إلى السلة',
                 'Buy Now': 'اشتري الآن', 'Create Shop': 'إنشاء متجر', 'My Shop': 'متجري', 'Edit Product': 'تعديل المنتج',
-                'Add Product': 'إضافة منتج', 'View Shop': 'عرض المتجر', 'Notifications': 'الإشعارات'
+                'Add Product': 'إضافة منتج', 'View Shop': 'عرض المتجر', 'Notifications': 'الإشعارات',
+                'Welcome to Livriha': 'مرحباً بكم في ليفريها', 'Your Ultimate Multi-Vendor Marketplace': 'سوقكم الإلكتروني متعدد البائعين',
+                'Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.': 'اكتشف منتجات رائعة من بائعين موثوقين حول العالم. تسوق بثقة، بع بسهولة.',
+                'Start Shopping': 'ابدأ التسوق', 'Join as Seller': 'انضم كبائع', 'Email': 'البريد الإلكتروني', 'Password': 'كلمة المرور',
+                'Username': 'اسم المستخدم', 'Confirm Password': 'تأكيد كلمة المرور', 'I want to sell products': 'أريد بيع المنتجات'
             }
         };
         
@@ -221,16 +233,22 @@
             
             // Update current page URL
             const currentPath = window.location.pathname;
-            const pathParts = currentPath.split('/').filter(part => part !== '');
+            let pathParts = currentPath.split('/').filter(part => part !== '');
             
             // Remove existing language prefix
             if (pathParts.length > 0 && ['en', 'fr', 'ar'].includes(pathParts[0])) {
                 pathParts.shift();
             }
             
-            // Add new language prefix
-            const newPath = lang === 'en' ? '/' + pathParts.join('/') : '/' + lang + '/' + pathParts.join('/');
-            window.location.href = newPath || '/';
+            // Build new path
+            let newPath;
+            if (lang === 'en') {
+                newPath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
+            } else {
+                newPath = '/' + lang + '/' + (pathParts.length > 0 ? pathParts.join('/') + '/' : '');
+            }
+            
+            window.location.href = newPath;
         }
     </script>
     <script>
