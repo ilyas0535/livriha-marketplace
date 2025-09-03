@@ -38,12 +38,16 @@ def register(request):
         user.save()
         
         verification_url = request.build_absolute_uri(reverse('verify_email', args=[token]))
-        send_mail(
-            'Verify your email - Livriha',
-            f'Welcome to Livriha!\n\nPlease click the link below to verify your email and activate your account:\n{verification_url}\n\nThank you!',
-            settings.DEFAULT_FROM_EMAIL,
-            [email]
-        )
+        try:
+            send_mail(
+                'Verify your email - Livriha',
+                f'Welcome to Livriha!\n\nPlease click the link below to verify your email and activate your account:\n{verification_url}\n\nThank you!',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=True
+            )
+        except Exception as e:
+            print(f"Email sending failed: {e}")
         
         messages.success(request, 'Registration successful! Check your email to verify your account before logging in.')
         return redirect('login')

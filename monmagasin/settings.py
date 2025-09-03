@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dyrnnp0zmdpwgvoi7p2k48t!3#o7ol3nl)v_nk2&q7*6mif9b-')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True  # Temporary to see error
 
 ALLOWED_HOSTS = ['livriha.store', 'web-production-a25f3.up.railway.app', 'localhost', '127.0.0.1']
 
