@@ -32,12 +32,15 @@ def register(request):
             is_active=False
         )
         
-        # Send verification email
+        # Generate verification token
         token = str(uuid.uuid4())
         user.verification_token = token
         user.save()
         
+        # Try to send email, but don't fail registration if it doesn't work
         verification_url = request.build_absolute_uri(reverse('verify_email', args=[token]))
+        email_sent = False
+        
         try:
             send_mail(
                 'Verify your email - Livriha',
@@ -46,10 +49,18 @@ def register(request):
                 [email],
                 fail_silently=False
             )
-            messages.success(request, 'Registration successful! Please check your email to verify your account.')
+            email_sent = True
         except Exception as e:
             print(f"Email sending failed: {e}")
-            messages.error(request, f'Registration failed. Email service unavailable. Please try again later.')
+            # Activate user immediately if email fails
+            user.is_active = True
+            user.email_verified = True
+            user.save()
+        
+        if email_sent:
+            messages.success(request, 'Registration successful! Please check your email to verify your account.')
+        else:
+            messages.success(request, 'Registration successful! Email verification temporarily disabled. You can log in now.')
         
 
         return redirect('login')
