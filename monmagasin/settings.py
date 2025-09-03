@@ -142,17 +142,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Email configuration
+# Email configuration - Use Mailgun (free tier)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.mailgun.org'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'protechdza@gmail.com'
-EMAIL_HOST_PASSWORD = 'pnbp msof iagp udzz'
-EMAIL_TIMEOUT = 30
-DEFAULT_FROM_EMAIL = 'protechdza@gmail.com'
-SERVER_EMAIL = 'protechdza@gmail.com'
+EMAIL_HOST_USER = 'postmaster@sandbox-123.mailgun.org'  # Replace with your Mailgun domain
+EMAIL_HOST_PASSWORD = 'your-mailgun-password'  # Replace with your Mailgun password
+DEFAULT_FROM_EMAIL = 'noreply@livriha.store'
+SERVER_EMAIL = 'noreply@livriha.store'
 
 AUTH_USER_MODEL = 'accounts.User'
 

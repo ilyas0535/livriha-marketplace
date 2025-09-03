@@ -32,31 +32,14 @@ def register(request):
             is_active=False
         )
         
-        # Send verification email
-        token = str(uuid.uuid4())
-        user.verification_token = token
+        # Skip email verification for now due to Railway SMTP limitations
+        user.is_active = True
+        user.email_verified = True
         user.save()
         
-        verification_url = request.build_absolute_uri(reverse('verify_email', args=[token]))
-        try:
-            send_mail(
-                'Verify your email - Livriha',
-                f'Welcome to Livriha!\n\nPlease click the link below to verify your email and activate your account:\n{verification_url}\n\nThank you!',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False
-            )
-            messages.success(request, 'Registration successful! Please check your email to verify your account.')
-        except Exception as e:
-            print(f"Email sending failed: {e}")
-            messages.warning(request, f'Registration successful! However, email verification failed: {str(e)}')
-            # For now, activate the user anyway
-            user.is_active = True
-            user.email_verified = True
-            user.save()
+        messages.success(request, 'Registration successful! You can now log in.')
         
-        messages.success(request, 'Registration successful! Check your email to verify your account before logging in.')
-        return redirect('login')
+
         return redirect('login')
     
     return render(request, 'accounts/register.html')
