@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /accounts/login/
+Disallow: /accounts/register/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /checkout/
+
+Sitemap: https://livriha.store/sitemap.xml
+
+# SEO Keywords for crawlers
+# free online store, create ecommerce website, multi-vendor marketplace
+# cash on delivery, payment gateway, sell online
+# boutique en ligne gratuite, créer site e-commerce, paiement à la livraison
+# متجر إلكتروني مجاني, إنشاء موقع تجارة إلكترونية, الدفع عند الاستلام
