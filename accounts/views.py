@@ -170,7 +170,32 @@ def reset_password(request, token):
 
 @login_required
 def dashboard(request):
+    # Admin dashboard for protechdza@gmail.com
+    if request.user.email == 'protechdza@gmail.com':
+        try:
+            from subscriptions.models import Subscription, PaymentConfirmation
+            pending_payments = PaymentConfirmation.objects.filter(is_confirmed=False)
+            all_subscriptions = Subscription.objects.all().order_by('-start_date')
+            all_users = User.objects.filter(is_seller=True)
+            
+            return render(request, 'accounts/admin_dashboard.html', {
+                'pending_payments': pending_payments,
+                'subscriptions': all_subscriptions,
+                'users': all_users,
+                'is_admin': True
+            })
+        except:
+            pass
+    
     if request.user.is_seller:
+        # Check subscription for sellers
+        try:
+            subscription = getattr(request.user, 'subscription', None)
+            if not subscription or subscription.is_expired:
+                return render(request, 'accounts/seller_no_subscription.html')
+        except:
+            return render(request, 'accounts/seller_no_subscription.html')
+        
         try:
             shop = request.user.shop
         except Shop.DoesNotExist:

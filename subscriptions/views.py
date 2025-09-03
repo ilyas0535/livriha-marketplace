@@ -26,18 +26,17 @@ def purchase_plan(request, plan_id):
     plan = get_object_or_404(SubscriptionPlan, id=plan_id)
     
     if request.method == 'POST':
-        form = PaymentForm(request.POST)
-        if form.is_valid():
-            # Create payment confirmation
-            payment = PaymentConfirmation.objects.create(
-                user=request.user,
-                plan=plan,
-                binance_user=form.cleaned_data['binance_user'],
-                binance_email=form.cleaned_data['binance_email'],
-                amount=plan.price
-            )
-            
-            # Send email to admin
+        # Create payment confirmation without form
+        payment = PaymentConfirmation.objects.create(
+            user=request.user,
+            plan=plan,
+            binance_user=request.user.username,
+            binance_email=request.user.email,
+            amount=plan.price
+        )
+        
+        # Send email to admin
+        try:
             send_mail(
                 subject=f'New Payment Confirmation - {request.user.username}',
                 message=f'''
@@ -45,26 +44,22 @@ Payment Details:
 - User: {request.user.username} ({request.user.email})
 - Plan: {plan.get_name_display()}
 - Amount: ${plan.price}
-- Binance User: {form.cleaned_data['binance_user']}
-- Binance Email: {form.cleaned_data['binance_email']}
+- User Email: {request.user.email}
 - Date: {payment.created_at}
 
 Please verify the payment and activate the subscription.
                 ''',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=['protechdza@gmail.com'],
-                fail_silently=False,
+                fail_silently=True,
             )
-            
-            messages.success(request, 'Payment confirmation sent! We will activate your subscription once payment is verified.')
-            return redirect('subscription_plans')
-    else:
-        form = PaymentForm()
+        except:
+            pass
+        
+        messages.success(request, 'Payment confirmation sent! We will activate your subscription once payment is verified.')
+        return redirect('subscription_plans')
     
-    return render(request, 'subscriptions/purchase.html', {
-        'plan': plan,
-        'form': form
-    })
+    return render(request, 'subscriptions/purchase.html', {'plan': plan})
 
 @login_required
 def admin_dashboard(request):

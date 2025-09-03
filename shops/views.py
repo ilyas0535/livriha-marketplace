@@ -10,6 +10,16 @@ def create_shop(request):
         messages.info(request, 'You already have a shop')
         return redirect('dashboard')
     
+    # Check if user has active subscription
+    try:
+        subscription = getattr(request.user, 'subscription', None)
+        if not subscription or subscription.is_expired:
+            messages.error(request, 'You need an active subscription to create a shop.')
+            return redirect('subscription_plans')
+    except:
+        messages.error(request, 'You need an active subscription to create a shop.')
+        return redirect('subscription_plans')
+    
     if request.method == 'POST':
         name = request.POST['name']
         description = request.POST['description']

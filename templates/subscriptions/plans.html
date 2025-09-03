@@ -78,7 +78,11 @@
                         <p>protechdzagmail.com</p>
                     </div>
                     
-                    <a href="{% url 'purchase_plan' plan.id %}" class="btn btn-primary">Select Plan</a>
+                    <form method="post" action="{% url 'purchase_plan' plan.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                        <button type="submit" class="btn btn-success">Payment Complete</button>
+                    </form>
                 </div>
             </div>
         </div>

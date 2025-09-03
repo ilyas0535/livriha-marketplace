@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2><i class="fas fa-crown"></i> Admin Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Pending Payment Confirmations</h5>
+                </div>
+                <div class="card-body">
+                    {% for payment in pending_payments %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>{{ payment.user.username }}</strong> ({{ payment.user.email }})<br>
+                        Plan: {{ payment.plan.get_name_display }}<br>
+                        Amount: ${{ payment.amount }}<br>
+                        Binance User: {{ payment.binance_user }}<br>
+                        Date: {{ payment.created_at|date:"M d, Y H:i" }}<br>
+                        <a href="{% url 'activate_subscription' payment.id %}" class="btn btn-success btn-sm">Activate</a>
+                    </div>
+                    {% empty %}
+                    <p>No pending payments</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Subscriptions</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% for sub in subscriptions %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>{{ sub.user.username }}</strong><br>
+                        Plan: {{ sub.plan.get_name_display }}<br>
+                        Status: {% if sub.is_expired %}<span class="text-danger">Expired</span>{% else %}<span class="text-success">Active</span>{% endif %}<br>
+                        Expires: {{ sub.end_date|date:"M d, Y" }}
+                    </div>
+                    {% empty %}
+                    <p>No subscriptions</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
