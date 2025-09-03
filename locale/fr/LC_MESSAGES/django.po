@@ -28,6 +28,9 @@ msgstr "Liste de souhaits"
 msgid "Search"
 msgstr "Rechercher"
 
+msgid "Search..."
+msgstr "Rechercher..."
+
 msgid "Create Free Online Store"
 msgstr "Créer une boutique en ligne gratuite"
 

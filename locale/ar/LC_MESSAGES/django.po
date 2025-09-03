@@ -28,6 +28,9 @@ msgstr "قائمة الأمنيات"
 msgid "Search"
 msgstr "بحث"
 
+msgid "Search..."
+msgstr "بحث..."
+
 msgid "Create Free Online Store"
 msgstr "إنشاء متجر إلكتروني مجاني"
 
