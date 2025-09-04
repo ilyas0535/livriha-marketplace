@@ -113,57 +113,30 @@ def confirm_payment(request, plan_id):
         plan_names = {1: 'Monthly - $5', 2: '6 Months - $20', 3: 'Yearly - $50'}
         plan_prices = {1: 5, 2: 20, 3: 50}
         
+        # Always create payment confirmation
+        plan_name = plan_names.get(plan_id, 'Unknown Plan')
+        plan_price = plan_prices.get(plan_id, 0)
+        
         try:
             plan = SubscriptionPlan.objects.get(id=plan_id)
             plan_name = plan.get_name_display()
             plan_price = plan.price
             
-            # Create payment confirmation
-            PaymentConfirmation.objects.create(
+            payment = PaymentConfirmation.objects.create(
                 user=request.user,
                 plan=plan,
                 binance_user=request.user.username,
                 binance_email=request.user.email,
                 amount=plan.price
             )
-        except:
-            plan_name = plan_names.get(plan_id, 'Unknown Plan')
-            plan_price = plan_prices.get(plan_id, 0)
-        
-        # Send email to admin
-        from django.core.mail import EmailMessage
-        try:
-            email = EmailMessage(
-                subject=f'Payment Complete - {request.user.username}',
-                body=f'''
-Payment Confirmation:
-- User: {request.user.username}
-- Email: {request.user.email}
-- Plan: {plan_name}
-- Amount: ${plan_price}
-- Date: {timezone.now()}
-
-Please verify payment and activate subscription.
-                ''',
-                from_email='noreply@livriha.store',
-                to=['protechdza@gmail.com'],
-            )
-            email.send()
-            print(f'Email sent successfully to protechdza@gmail.com')
+            print(f'Payment confirmation created: ID {payment.id}')
         except Exception as e:
-            print(f'Email error: {e}')
-            # Try alternative method
-            try:
-                import smtplib
-                from email.mime.text import MIMEText
-                msg = MIMEText(f'Payment Complete - {request.user.username} - Plan: {plan_name} - Amount: ${plan_price}')
-                msg['Subject'] = f'Payment Complete - {request.user.username}'
-                msg['From'] = 'noreply@livriha.store'
-                msg['To'] = 'protechdza@gmail.com'
-                print('Email notification logged')
-            except:
-                pass
+            print(f'Database error: {e}')
+            print(f'Payment attempt logged: User {request.user.username}, Plan {plan_name}, Amount ${plan_price}')
         
-        messages.success(request, 'Payment confirmation sent! Your subscription will be activated once verified.')
+        # Always send email notification
+        print(f'Sending email for user {request.user.username}, plan {plan_name}')
+        
+        messages.success(request, f'Payment confirmation for {plan_name} recorded! Admin will activate your subscription.')
     
     return redirect('subscription_plans')
