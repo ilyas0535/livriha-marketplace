@@ -113,30 +113,28 @@ def confirm_payment(request, plan_id):
         plan_names = {1: 'Monthly - $5', 2: '6 Months - $20', 3: 'Yearly - $50'}
         plan_prices = {1: 5, 2: 20, 3: 50}
         
-        # Always create payment confirmation
         plan_name = plan_names.get(plan_id, 'Unknown Plan')
         plan_price = plan_prices.get(plan_id, 0)
         
-        try:
-            plan = SubscriptionPlan.objects.get(id=plan_id)
-            plan_name = plan.get_name_display()
-            plan_price = plan.price
-            
-            payment = PaymentConfirmation.objects.create(
-                user=request.user,
-                plan=plan,
-                binance_user=request.user.username,
-                binance_email=request.user.email,
-                amount=plan.price
-            )
-            print(f'Payment confirmation created: ID {payment.id}')
-        except Exception as e:
-            print(f'Database error: {e}')
-            print(f'Payment attempt logged: User {request.user.username}, Plan {plan_name}, Amount ${plan_price}')
+        # Force create payment confirmation
+        plan = SubscriptionPlan.objects.get(id=plan_id)
+        payment = PaymentConfirmation.objects.create(
+            user=request.user,
+            plan=plan,
+            binance_user=request.user.username,
+            binance_email=request.user.email,
+            amount=plan.price
+        )
         
-        # Always send email notification
-        print(f'Sending email for user {request.user.username}, plan {plan_name}')
+        # Force send email
+        send_mail(
+            subject=f'Payment Complete - {request.user.username}',
+            message=f'User: {request.user.username}\nEmail: {request.user.email}\nPlan: {plan.get_name_display()}\nAmount: ${plan.price}',
+            from_email='noreply@livriha.store',
+            recipient_list=['protechdza@gmail.com'],
+            fail_silently=False,
+        )
         
-        messages.success(request, f'Payment confirmation for {plan_name} recorded! Admin will activate your subscription.')
+        messages.success(request, f'Payment confirmation sent! Check admin dashboard.')
     
     return redirect('subscription_plans')
