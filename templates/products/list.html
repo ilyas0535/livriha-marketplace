@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <h5>Categories</h5>
+            <div class="list-group">
+                <a href="{% url 'product_list' %}" class="list-group-item {% if not selected_category %}active{% endif %}">All Products</a>
+                {% for category in categories %}
+                <a href="?category={{ category.id }}" class="list-group-item {% if selected_category == category.id %}active{% endif %}">{{ category.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Products</h2>
+                <form method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-outline-primary">Search</button>
+                </form>
+            </div>
+            
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        {% if product.images.exists %}
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <p class="card-text text-truncate">{{ product.description }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if product.is_on_sale %}
+                                        <span class="text-decoration-line-through text-muted">${{ product.old_price }}</span>
+                                        <span class="text-danger fw-bold">${{ product.price }}</span>
+                                    {% else %}
+                                        <span class="fw-bold">${{ product.price }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% if user.is_authenticated %}
+                                        <button class="btn btn-sm btn-outline-success" onclick="addToCart({{ product.id }})">Cart</button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="addToWishlist({{ product.id }})">♡</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if product.is_out_of_stock %}
+                                <div class="mt-2">
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                </div>
+                            {% elif product.is_low_stock %}
+                                <div class="mt-2">
+                                    <span class="badge bg-warning">Low Stock</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <h5>No products found</h5>
+                        <p>Try adjusting your search or browse different categories.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addToCart(productId) {
+    fetch(`/products/add-to-cart/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    });
+}
+
+function addToWishlist(productId) {
+    fetch(`/products/add-to-wishlist/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    });
+}
+</script>
+{% endblock %}
