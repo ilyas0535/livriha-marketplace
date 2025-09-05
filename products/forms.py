@@ -3,7 +3,7 @@ from .models import Product, ProductImage
 
 class ProductForm(forms.ModelForm):
     images = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        widget=forms.FileInput(attrs={'multiple': True}),
         required=False,
         help_text='Select multiple images for your product'
     )
