@@ -1,47 +1,75 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <h2>Add New Product</h2>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">Product Name</label>
-                <input type="text" name="name" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="4" required></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Price ($)</label>
-                        <input type="number" name="price" class="form-control" step="0.01" required>
-                    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add New Product</h4>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Old Price ($ - for discounts)</label>
-                        <input type="number" name="old_price" class="form-control" step="0.01">
-                    </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Product Name</label>
+                            {{ form.name }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            {{ form.category }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Price ($)</label>
+                                    {{ form.price }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Old Price ($) - Optional</label>
+                                    {{ form.old_price }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quantity</label>
+                                    {{ form.quantity }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Low Stock Alert</label>
+                                    {{ form.low_stock_threshold }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Product Images</label>
+                            {{ form.images }}
+                            <div class="form-text">{{ form.images.help_text }}</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Quantity</label>
-                <input type="number" name="quantity" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Product Images</label>
-                <input type="file" name="images" class="form-control" accept="image/*" multiple>
-                <small class="form-text text-muted">You can select multiple images</small>
-            </div>
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'manage_products' %}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Add Product</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
