@@ -13,7 +13,7 @@ urlpatterns = [
     path('shop/', include('shops.urls')),
     path('products/', include('products.urls')),
     path('orders/', include('orders.urls')),
-    path('subscriptions/', include('subscriptions.urls')),
+
     # SEO URLs
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap_xml, name='sitemap_xml'),

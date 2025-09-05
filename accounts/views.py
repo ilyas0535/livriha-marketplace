@@ -173,14 +173,6 @@ def dashboard(request):
 
     
     if request.user.is_seller:
-        # Check subscription for sellers
-        try:
-            subscription = getattr(request.user, 'subscription', None)
-            if not subscription or subscription.is_expired:
-                return render(request, 'accounts/seller_no_subscription.html')
-        except:
-            return render(request, 'accounts/seller_no_subscription.html')
-        
         try:
             shop = request.user.shop
         except Shop.DoesNotExist:
