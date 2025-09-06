@@ -63,6 +63,17 @@
                             <div class="form-text">{{ form.images.help_text }}</div>
                         </div>
                         
+                        <!-- Product Variants -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Product Variants</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariant()">Add Variant</button>
+                            </div>
+                            <div id="variants-container">
+                                <div class="text-muted">No variants added. Click "Add Variant" to create product options like size, color, etc.</div>
+                            </div>
+                        </div>
+                        
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Add Product</button>
                         </div>
@@ -72,4 +83,76 @@
         </div>
     </div>
 </div>
+
+<script>
+let variantCount = 0;
+
+function addVariant() {
+    const container = document.getElementById('variants-container');
+    
+    // Clear the "no variants" message
+    if (variantCount === 0) {
+        container.innerHTML = '';
+    }
+    
+    const variantDiv = document.createElement('div');
+    variantDiv.className = 'card mb-3';
+    variantDiv.innerHTML = `
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6>Variant ${variantCount + 1}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeVariant(this)">Remove</button>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Variant Name</label>
+                        <input type="text" class="form-control" name="variant_name_${variantCount}" placeholder="e.g., Red - Large">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">SKU (Optional)</label>
+                        <input type="text" class="form-control" name="variant_sku_${variantCount}" placeholder="e.g., RED-LG-001">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Price Override (Optional)</label>
+                        <input type="number" step="0.01" class="form-control" name="variant_price_${variantCount}" placeholder="Leave empty to use product price">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="variant_quantity_${variantCount}" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Variant Image (Optional)</label>
+                <input type="file" class="form-control" name="variant_image_${variantCount}" accept="image/*">
+            </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(variantDiv);
+    variantCount++;
+}
+
+function removeVariant(button) {
+    button.closest('.card').remove();
+    
+    // Show "no variants" message if all removed
+    const container = document.getElementById('variants-container');
+    if (container.children.length === 0) {
+        container.innerHTML = '<div class="text-muted">No variants added. Click "Add Variant" to create product options like size, color, etc.</div>';
+        variantCount = 0;
+    }
+}
+</script>
+
 {% endblock %}

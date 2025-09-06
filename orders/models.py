@@ -57,12 +57,36 @@ class OrderStatusHistory(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant = models.CharField(max_length=100, blank=True)
+    product_variant = models.ForeignKey('products.ProductVariant', on_delete=models.CASCADE, null=True, blank=True)
+    variant_name = models.CharField(max_length=100, blank=True)  # Store variant name for history
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.product.name} x{self.quantity}"
+        variant_text = f" - {self.variant_name}" if self.variant_name else ""
+        return f"{self.product.name}{variant_text} x{self.quantity}"
+    
+    def save(self, *args, **kwargs):
+        # Store variant name for history
+        if self.product_variant:
+            self.variant_name = self.product_variant.name
+        
+        # Deduct quantity from variant or product
+        if not self.pk:  # Only on creation
+            if self.product_variant:
+                if self.product_variant.quantity >= self.quantity:
+                    self.product_variant.quantity -= self.quantity
+                    self.product_variant.save()
+                else:
+                    raise ValueError(f"Insufficient stock for {self.product_variant.name}")
+            else:
+                if self.product.quantity >= self.quantity:
+                    self.product.quantity -= self.quantity
+                    self.product.save()
+                else:
+                    raise ValueError(f"Insufficient stock for {self.product.name}")
+        
+        super().save(*args, **kwargs)
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [

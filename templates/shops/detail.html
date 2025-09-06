@@ -26,11 +26,38 @@
     {% for product in products %}
     <div class="col-md-4 mb-4">
         <div class="card">
-            {% if product.images.first %}
-                <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: contain; background: #f8f9fa;">
+            {% with all_images=product.get_all_images %}
+            {% if all_images %}
+                <div id="shopCarousel{{ product.id }}" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in all_images %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ image.url }}" class="d-block w-100" style="height: 250px; object-fit: contain; cursor: pointer; background: #f8f9fa;" alt="{{ image.alt }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if all_images|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#shopCarousel{{ product.id }}" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#shopCarousel{{ product.id }}" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    <!-- Image count indicator -->
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-dark bg-opacity-75" style="font-size: 0.6rem;">{{ all_images|length }} photos</span>
+                    </div>
+                    {% endif %}
+                </div>
             {% endif %}
+            {% endwith %}
             <div class="card-body">
-                <h5 class="card-title"><a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">{{ product.name }}</a></h5>
+                <h5 class="card-title">
+                    <a href="/products/{{ product.id }}/" class="text-decoration-none text-dark">{{ product.name }}</a>
+                    {% if product.variants.count > 0 %}
+                        <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">{{ product.variants.count }} variants</span>
+                    {% endif %}
+                </h5>
                 <p class="card-text">{{ product.description|truncatewords:15 }}</p>
                 <div class="text-warning mb-2">
                     {% for i in "12345" %}
@@ -49,7 +76,9 @@
                     </div>
                 </div>
                 <div class="mt-2">
-                    {% if product.is_out_of_stock %}
+                    {% if user.is_authenticated and user == shop.owner %}
+                        <a href="{% url 'edit_product' product.id %}" class="btn btn-warning btn-sm">Edit Product</a>
+                    {% elif product.is_out_of_stock %}
                         <span class="badge bg-danger">Out of Stock</span>
                     {% else %}
                         <div class="d-flex gap-1 mb-2">
@@ -57,8 +86,10 @@
                             <a href="{% url 'buy_now' product.id %}" class="btn btn-success btn-sm">Buy Now</a>
                         </div>
                     {% endif %}
-                    {% if user.is_authenticated %}
-
+                    {% if user.is_authenticated and user != shop.owner %}
+                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn btn-outline-secondary btn-sm mt-1">
+                            <i class="far fa-heart"></i> Wishlist
+                        </a>
                     {% endif %}
                 </div>
             </div>

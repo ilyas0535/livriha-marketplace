@@ -4,16 +4,17 @@
 <div class="row">
     <div class="col-md-6">
         <!-- Product Images -->
-        {% if product.images.all %}
+        {% with all_images=product.get_all_images %}
+        {% if all_images %}
             <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
-                    {% for image in product.images.all %}
+                    {% for image in all_images %}
                     <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <img src="{{ image.image.url }}" class="d-block w-100" style="height: 400px; object-fit: contain; background: #f8f9fa; cursor: pointer;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})">
+                        <img src="{{ image.url }}" class="d-block w-100" style="height: 400px; object-fit: contain; background: #f8f9fa; cursor: pointer;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})" alt="{{ image.alt }}">
                     </div>
                     {% endfor %}
                 </div>
-                {% if product.images.count > 1 %}
+                {% if all_images|length > 1 %}
                 <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon"></span>
                 </button>
@@ -23,60 +24,48 @@
                 {% endif %}
             </div>
         {% endif %}
+        {% endwith %}
     </div>
     
     <div class="col-md-6">
         <h1>{{ product.name }}</h1>
-        <p class="text-muted">by <a href="{{ product.shop.get_absolute_url }}" class="text-decoration-none">{{ product.shop.name }}</a></p>
+        <p class="text-muted">by <a href="/shop/{{ product.shop.slug }}/" class="text-decoration-none">{{ product.shop.name }}</a></p>
         
         <!-- Rating -->
-        {% if product.average_rating > 0 %}
-            <div class="text-warning mb-3">
+        <div class="mb-3">
+            <div class="text-warning">
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product.average_rating %}
-                        <i class="fas fa-star" style="font-size: 16px;"></i>
-                    {% else %}
-                        <i class="far fa-star" style="font-size: 16px;"></i>
-                    {% endif %}
+                    <i class="{% if forloop.counter <= product.sales_rating %}fas{% else %}far{% endif %} fa-star"></i>
                 {% endfor %}
-                <span class="text-muted">({{ product.rating_count }} reviews)</span>
+                <span class="text-muted">({{ product.sales_count }} sold)</span>
             </div>
-        {% endif %}
+        </div>
         
         <!-- Price -->
         <div class="mb-3">
             {% if product.is_on_sale %}
-                <span class="text-muted text-decoration-line-through h5">${{ product.old_price }}</span>
-                <span class="text-danger fw-bold h4">${{ product.price }}</span>
+                <span class="text-muted text-decoration-line-through h5" id="old-price">${{ product.old_price }}</span>
+                <span class="text-danger fw-bold h4" id="current-price">${{ product.price }}</span>
             {% else %}
-                <span class="fw-bold h4">${{ product.price }}</span>
+                <span class="fw-bold h4" id="current-price">${{ product.price }}</span>
             {% endif %}
         </div>
         
-        <!-- Description -->
-        <div class="mb-4">
-            <h5>Description</h5>
-            <p>{{ product.description }}</p>
-        </div>
-        
         <!-- Stock -->
-        <div class="mb-3">
+        <div class="mb-3" id="stock-display">
             {% if user.is_authenticated and product.shop.owner == user %}
-                <!-- Show quantity for product owner -->
                 {% if product.is_out_of_stock %}
                     <span class="badge bg-danger">Out of Stock (0 units)</span>
                 {% else %}
                     <span class="text-success">{{ product.quantity }} units in stock</span>
                 {% endif %}
             {% elif product.shop.show_stock_to_customers %}
-                <!-- Show quantity to customers if enabled -->
                 {% if product.is_out_of_stock %}
                     <span class="badge bg-danger">Out of Stock</span>
                 {% else %}
                     <span class="text-success">{{ product.quantity }} available</span>
                 {% endif %}
             {% else %}
-                <!-- Show stock status only -->
                 {% if product.is_out_of_stock %}
                     <span class="badge bg-danger">Out of Stock</span>
                 {% elif product.is_low_stock %}
@@ -87,64 +76,65 @@
             {% endif %}
         </div>
         
+        <!-- Description -->
+        <div class="mb-4">
+            <h5>Description</h5>
+            <p>{{ product.description }}</p>
+        </div>
+        
+        <!-- Variants -->
+        {% if product.variants.all %}
+        <div class="mb-4">
+            <h5>Options</h5>
+            <div id="variant-selection">
+                {% for variant in product.variants.all %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="variant" id="variant{{ variant.id }}" value="{{ variant.id }}" onchange="updateVariantPrice({{ variant.id }}, {{ variant.effective_price }}, {{ variant.quantity }})">
+                    <label class="form-check-label" for="variant{{ variant.id }}">
+                        {{ variant.name }} 
+                        {% if variant.price %}
+                            <span class="text-primary fw-bold">${{ variant.effective_price }}</span>
+                        {% endif %}
+                        <span class="text-muted">({{ variant.quantity }} available)</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Actions -->
         <div class="d-flex gap-2 mb-4">
-            {% if not product.is_out_of_stock %}
-                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to Cart</a>
-                <a href="{% url 'buy_now' product.id %}" class="btn btn-success">Buy Now</a>
+            {% if user.is_authenticated and user == product.shop.owner %}
+                <a href="/products/edit/{{ product.id }}/" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Product
+                </a>
+            {% elif not product.is_out_of_stock %}
+                <form method="post" action="/products/add-to-cart/{{ product.id }}/" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="variant_id" id="selected_variant_id">
+                    <button type="submit" class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>
+                </form>
+                <form method="post" action="/orders/buy-now/{{ product.id }}/" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="variant_id" id="selected_variant_id_buy">
+                    <button type="submit" class="btn btn-success" id="buy-now-btn">Buy Now</button>
+                </form>
             {% endif %}
-            {% if user.is_authenticated %}
-                <a href="{% url 'add_to_wishlist' product.id %}" class="btn btn-outline-secondary">
+            
+            {% if user.is_authenticated and user != product.shop.owner %}
+                <a href="/products/add-to-wishlist/{{ product.id }}/" class="btn btn-outline-secondary">
                     <i class="far fa-heart"></i> Wishlist
                 </a>
-                {% if user != product.shop.owner %}
-                    <button class="btn btn-outline-primary" onclick="openUserChat({{ product.shop.owner.id }}, '{{ product.shop.name }}', {{ product.id }})">
-                        <i class="fas fa-comments"></i> Chat with Seller
-                    </button>
-                {% endif %}
-            {% else %}
+                <button class="btn btn-outline-primary" onclick="openUserChat({{ product.shop.owner.id }}, '{{ product.shop.name }}', {{ product.id }})">
+                    <i class="fas fa-comments"></i> Chat with Seller
+                </button>
+            {% elif not user.is_authenticated %}
                 <button class="btn btn-outline-primary" onclick="showLoginPrompt()">
                     <i class="fas fa-comments"></i> Chat with Seller
                 </button>
             {% endif %}
-
         </div>
-    </div>
-</div>
-
-<!-- Reviews Section -->
-<div class="row mt-5">
-    <div class="col-12">
-        <h3>Customer Reviews</h3>
-        
-        {% if reviews %}
-            {% for review in reviews %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-title">{{ review.user.username }}</h6>
-                            <div class="text-warning mb-2">
-                                {% for i in "12345" %}
-                                    {% if forloop.counter <= review.rating %}
-                                        <i class="fas fa-star" style="font-size: 14px;"></i>
-                                    {% else %}
-                                        <i class="far fa-star" style="font-size: 14px;"></i>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            {% if review.comment %}
-                                <p class="card-text">{{ review.comment }}</p>
-                            {% endif %}
-                        </div>
-                        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted">No reviews yet. Be the first to review this product!</p>
-        {% endif %}
     </div>
 </div>
 
@@ -156,15 +146,13 @@
                 <h5 class="modal-title">{{ product.name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0">
-                <div id="imageModalCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner" id="modalCarouselInner">
-                        <!-- Images will be loaded here -->
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#imageModalCarousel" data-bs-slide="prev">
+            <div class="modal-body">
+                <div id="modalCarousel" class="carousel slide">
+                    <div class="carousel-inner" id="modalCarouselInner"></div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#modalCarousel" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon"></span>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#imageModalCarousel" data-bs-slide="next">
+                    <button class="carousel-control-next" type="button" data-bs-target="#modalCarousel" data-bs-slide="next">
                         <span class="carousel-control-next-icon"></span>
                     </button>
                 </div>
@@ -174,6 +162,44 @@
 </div>
 
 <script>
+function updateVariantPrice(variantId, price, quantity) {
+    const priceElement = document.getElementById('current-price');
+    const stockElement = document.getElementById('stock-display');
+    const variantInputs = document.querySelectorAll('#selected_variant_id, #selected_variant_id_buy');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const buyNowBtn = document.getElementById('buy-now-btn');
+    
+    if (priceElement) {
+        priceElement.textContent = `$${price}`;
+    }
+    
+    if (stockElement) {
+        if (quantity === 0) {
+            stockElement.innerHTML = '<span class="badge bg-danger">Out of Stock</span>';
+        } else {
+            stockElement.innerHTML = `<span class="text-success">${quantity} available</span>`;
+        }
+    }
+    
+    variantInputs.forEach(input => {
+        input.value = variantId;
+    });
+    
+    if (addToCartBtn && buyNowBtn) {
+        if (quantity === 0) {
+            addToCartBtn.disabled = true;
+            buyNowBtn.disabled = true;
+            addToCartBtn.textContent = 'Out of Stock';
+            buyNowBtn.textContent = 'Out of Stock';
+        } else {
+            addToCartBtn.disabled = false;
+            buyNowBtn.disabled = false;
+            addToCartBtn.textContent = 'Add to Cart';
+            buyNowBtn.textContent = 'Buy Now';
+        }
+    }
+}
+
 function openImageModal(productId, startIndex) {
     const product = document.querySelector('#productCarousel');
     const images = product.querySelectorAll('.carousel-item img');
@@ -184,7 +210,7 @@ function openImageModal(productId, startIndex) {
     images.forEach((img, index) => {
         const div = document.createElement('div');
         div.className = `carousel-item ${index === startIndex ? 'active' : ''}`;
-        div.innerHTML = `<img src="${img.src}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;">`;
+        div.innerHTML = `<img src="${img.src}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;" alt="${img.alt}">`;
         modalInner.appendChild(div);
     });
     
@@ -196,201 +222,5 @@ function showLoginPrompt() {
     alert('Please login to chat with the seller.');
     window.location.href = '/accounts/login/';
 }
-
-function openUserChat(sellerId, shopName, productId) {
-    // Create or open chat window with seller
-    fetch('/accounts/start-user-chat/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: `seller_id=${sellerId}&product_id=${productId || ''}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            openChatWindow(data.chat_id, shopName, sellerId);
-        }
-    });
-}
-
-function openChatWindow(chatId, shopName, sellerId) {
-    const existingWindow = document.getElementById(`chat-window-${chatId}`);
-    if (existingWindow) {
-        existingWindow.style.display = 'block';
-        return;
-    }
-    
-    const chatWindow = document.createElement('div');
-    chatWindow.id = `chat-window-${chatId}`;
-    chatWindow.className = 'position-fixed bg-white border rounded shadow';
-    chatWindow.style.cssText = `
-        bottom: 20px;
-        right: 20px;
-        width: 300px;
-        height: 400px;
-        z-index: 1060;
-    `;
-    
-    chatWindow.innerHTML = `
-        <div class="bg-primary text-white p-2 d-flex justify-content-between align-items-center">
-            <span class="fw-bold">${shopName}</span>
-            <div>
-                <button class="btn btn-sm btn-outline-light me-1" onclick="collapseChatWindow('${chatId}', '${shopName}')">
-                    <i class="fas fa-minus"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-light" onclick="closeChatWindow('${chatId}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <div class="p-2" style="height: 300px; overflow-y: auto; background: #f8f9fa;" id="chatMessages-${chatId}">
-        </div>
-        <div class="p-2 border-top">
-            <div class="input-group input-group-sm">
-                <input type="text" class="form-control" id="chatInput-${chatId}" placeholder="Type message...">
-                <button class="btn btn-primary" onclick="sendUserMessage('${chatId}', ${sellerId})">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(chatWindow);
-    loadUserChatMessages(chatId);
-    
-    // Auto-refresh messages every 3 seconds
-    const refreshInterval = setInterval(() => {
-        if (document.getElementById(`chat-window-${chatId}`).style.display !== 'none') {
-            loadUserChatMessages(chatId);
-        } else {
-            clearInterval(refreshInterval);
-        }
-    }, 3000);
-    
-    document.getElementById(`chatInput-${chatId}`).addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendUserMessage(chatId, sellerId);
-        }
-    });
-}
-
-function closeChatWindow(chatId) {
-    const window = document.getElementById(`chat-window-${chatId}`);
-    const bubble = document.getElementById(`chat-bubble-${chatId}`);
-    if (window) {
-        window.remove();
-    }
-    if (bubble) {
-        bubble.remove();
-    }
-}
-
-function collapseChatWindow(chatId, username) {
-    const window = document.getElementById(`chat-window-${chatId}`);
-    if (window) {
-        window.style.display = 'none';
-        createChatBubble(chatId, username);
-    }
-}
-
-function createChatBubble(chatId, username) {
-    const existingBubble = document.getElementById(`chat-bubble-${chatId}`);
-    if (existingBubble) return;
-    
-    const existingBubbles = document.querySelectorAll('[id^="chat-bubble-"]');
-    const bubbleIndex = existingBubbles.length;
-    
-    const bubble = document.createElement('div');
-    bubble.id = `chat-bubble-${chatId}`;
-    bubble.className = 'position-fixed bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow';
-    bubble.style.cssText = `
-        bottom: 20px;
-        right: ${90 + (bubbleIndex * 70)}px;
-        width: 60px;
-        height: 60px;
-        z-index: 1050;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    `;
-    
-    bubble.innerHTML = `
-        <div class="text-center">
-            <i class="fas fa-comment fa-lg"></i>
-            <div style="font-size: 10px; font-weight: bold;">${username.charAt(0).toUpperCase()}</div>
-        </div>
-    `;
-    
-    bubble.onclick = () => expandChatFromBubble(chatId, username);
-    bubble.onmouseenter = () => {
-        bubble.style.transform = 'scale(1.1)';
-        bubble.style.backgroundColor = '#0056b3';
-    };
-    bubble.onmouseleave = () => {
-        bubble.style.transform = 'scale(1)';
-        bubble.style.backgroundColor = '#007bff';
-    };
-    
-    document.body.appendChild(bubble);
-}
-
-function expandChatFromBubble(chatId, username) {
-    const bubble = document.getElementById(`chat-bubble-${chatId}`);
-    if (bubble) {
-        bubble.remove();
-    }
-    openChatWindow(chatId, username, 0);
-}
-
-function sendUserMessage(chatId, sellerId) {
-    const input = document.getElementById(`chatInput-${chatId}`);
-    const message = input.value.trim();
-    if (!message) return;
-    
-    fetch('/accounts/send-user-message/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: `chat_id=${chatId}&message=${encodeURIComponent(message)}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            input.value = '';
-            loadUserChatMessages(chatId);
-        }
-    });
-}
-
-function loadUserChatMessages(chatId) {
-    fetch(`/accounts/get-user-messages/?chat_id=${chatId}`)
-    .then(response => response.json())
-    .then(data => {
-        const chatDiv = document.getElementById(`chatMessages-${chatId}`);
-        if (!chatDiv) return;
-        
-        chatDiv.innerHTML = '';
-        
-        data.messages.forEach(msg => {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `mb-2 ${msg.is_sender ? 'text-end' : 'text-start'}`;
-            msgDiv.innerHTML = `
-                <div class="d-inline-block p-3 ${msg.is_sender ? 'text-white' : 'bg-white'}" style="max-width: 75%; word-wrap: break-word; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); ${msg.is_sender ? 'background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;' : 'color: #000 !important; border: 1px solid #e9ecef;'}">
-                    <div style="${msg.is_sender ? 'color: #fff !important;' : 'color: #000 !important;'} font-size: 14px; line-height: 1.4;">${msg.message}</div>
-                    <div style="${msg.is_sender ? 'color: rgba(255,255,255,0.8) !important;' : 'color: #6c757d !important;'} font-size: 11px; margin-top: 4px; text-align: right;">${msg.time}</div>
-                </div>
-            `;
-            chatDiv.appendChild(msgDiv);
-        });
-        
-        chatDiv.scrollTop = chatDiv.scrollHeight;
-    });
-}
-
-
 </script>
-
 {% endblock %}

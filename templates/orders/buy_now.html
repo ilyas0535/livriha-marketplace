@@ -26,11 +26,35 @@
                     {% endif %}
                     
                     <h5 class="fw-bold">{{ product.name }}</h5>
+                    <!-- Variant Selection -->
+                    {% if product.variants.all %}
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Select Option:</strong></label>
+                            <div id="variant-selection">
+                                {% for variant in product.variants.all %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="variant_choice" id="buyVariant{{ variant.id }}" value="{{ variant.id }}" 
+                                           {% if selected_variant and selected_variant.id == variant.id %}checked{% endif %}
+                                           onchange="updateBuyNowPrice({{ variant.id }}, {{ variant.effective_price }}, {{ variant.quantity }})">
+                                    <label class="form-check-label" for="buyVariant{{ variant.id }}">
+                                        {{ variant.name }} 
+                                        {% if variant.price %}
+                                            <span class="text-primary fw-bold">${{ variant.effective_price }}</span>
+                                        {% endif %}
+                                        <span class="text-muted">({{ variant.quantity }} available)</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% elif selected_variant %}
+                        <p class="text-primary small mb-2"><strong>Variant:</strong> {{ selected_variant.name }}</p>
+                    {% endif %}
                     <p class="text-muted small">{{ product.description|truncatechars:100 }}</p>
                     
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="price">
-                            <h3 class="text-success mb-0">${{ product.price }}</h3>
+                            <h3 class="text-success mb-0 product-price">${{ effective_price|default:product.price }}</h3>
                             <small class="text-muted">Per item</small>
                         </div>
                         <div class="text-end">
@@ -52,12 +76,12 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
-                            <span class="fw-bold">${{ product.price }}</span>
+                            <span class="fw-bold product-price">${{ effective_price|default:product.price }}</span>
                         </div>
                         <hr class="my-2">
                         <div class="d-flex justify-content-between">
                             <span class="fw-bold">Total:</span>
-                            <span class="fw-bold text-success h5">${{ product.price }}</span>
+                            <span class="fw-bold text-success h5 product-price">${{ effective_price|default:product.price }}</span>
                         </div>
                     </div>
                 </div>
@@ -69,6 +93,11 @@
     <div class="col-lg-7">
         <form method="post" class="checkout-form">
             {% csrf_token %}
+            {% if selected_variant %}
+                <input type="hidden" name="variant_id" value="{{ selected_variant.id }}" id="buy_variant_id">
+            {% else %}
+                <input type="hidden" name="variant_id" value="" id="buy_variant_id">
+            {% endif %}
             
             <!-- Delivery Information -->
             <div class="card mb-4">
@@ -131,11 +160,11 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex gap-3">
-                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary flex-fill">
+                        <a href="/products/{{ product.id }}/" class="btn btn-outline-secondary flex-fill">
                             <i class="fas fa-arrow-left me-1"></i>Back to Product
                         </a>
                         <button type="submit" class="btn btn-success btn-lg flex-fill">
-                            <i class="fas fa-shopping-cart me-2"></i>Complete Purchase - ${{ product.price }}
+                            <i class="fas fa-shopping-cart me-2"></i>Complete Purchase - ${{ effective_price|default:product.price }}
                         </button>
                     </div>
                     
@@ -210,4 +239,27 @@
     background: #f8f9fa;
 }
 </style>
+
+<script>
+function updateBuyNowPrice(variantId, price, quantity) {
+    // Update price displays
+    const priceElements = document.querySelectorAll('.product-price');
+    priceElements.forEach(el => {
+        el.textContent = `$${price}`;
+    });
+    
+    // Update hidden variant input
+    const variantInput = document.getElementById('buy_variant_id');
+    if (variantInput) {
+        variantInput.value = variantId;
+    }
+    
+    // Update button text
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.innerHTML = `<i class="fas fa-shopping-cart me-2"></i>Complete Purchase - $${price}`;
+    }
+}
+</script>
+
 {% endblock %}

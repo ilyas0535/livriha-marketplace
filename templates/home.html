@@ -34,27 +34,38 @@
     {% for product in products %}
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm product-card">
-            {% if product.images.all %}
+            {% with all_images=product.get_all_images %}
+            {% if all_images %}
                 <div id="carousel{{ product.id }}" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
-                        {% for image in product.images.all %}
+                        {% for image in all_images %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ image.image.url }}" class="d-block w-100" style="height: 140px; object-fit: contain; cursor: pointer; background: #f8f9fa;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})">
+                            <img src="{{ image.url }}" class="d-block w-100" style="height: 140px; object-fit: contain; cursor: pointer; background: #f8f9fa;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})" alt="{{ image.alt }}">
                         </div>
                         {% endfor %}
                     </div>
-                    {% if product.images.count > 1 %}
+                    {% if all_images|length > 1 %}
                     <button class="carousel-control-prev" type="button" data-bs-target="#carousel{{ product.id }}" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon"></span>
                     </button>
                     <button class="carousel-control-next" type="button" data-bs-target="#carousel{{ product.id }}" data-bs-slide="next">
                         <span class="carousel-control-next-icon"></span>
                     </button>
+                    <!-- Image count indicator -->
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-dark bg-opacity-75" style="font-size: 0.6rem;">{{ all_images|length }} photos</span>
+                    </div>
                     {% endif %}
                 </div>
             {% endif %}
+            {% endwith %}
             <div class="card-body p-2">
-                <h6 class="card-title mb-1 small"><a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">{{ product.name|truncatechars:25 }}</a></h6>
+                <h6 class="card-title mb-1 small">
+                    <a href="/products/{{ product.id }}/" class="text-decoration-none text-dark">{{ product.name|truncatechars:25 }}</a>
+                    {% if product.variants.count > 0 %}
+                        <span class="badge bg-secondary ms-1" style="font-size: 0.6rem;">{{ product.variants.count }} variants</span>
+                    {% endif %}
+                </h6>
                 <div class="mb-2">
                     <div class="text-warning">
                         {% for i in "12345" %}
@@ -206,7 +217,7 @@ function openImageModal(productId, startIndex) {
     images.forEach((img, index) => {
         const div = document.createElement('div');
         div.className = `carousel-item ${index === startIndex ? 'active' : ''}`;
-        div.innerHTML = `<img src="${img.src}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;">`;
+        div.innerHTML = `<img src="${img.src}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;" alt="${img.alt}">`;
         modalInner.appendChild(div);
     });
     

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from .models import Product, Category, Wishlist, Cart, CartItem, ProductImage
+from .models import Product, Category, Wishlist, Cart, CartItem, ProductImage, ProductVariant
 from .forms import ProductForm
 from shops.models import Shop
 
@@ -72,6 +72,27 @@ def add_product(request):
                     is_primary=(i == 0)  # First image is primary
                 )
             
+            # Handle variants
+            variant_index = 0
+            while f'variant_name_{variant_index}' in request.POST:
+                variant_name = request.POST.get(f'variant_name_{variant_index}')
+                if variant_name:
+                    variant = ProductVariant.objects.create(
+                        product=product,
+                        name=variant_name,
+                        sku=request.POST.get(f'variant_sku_{variant_index}', ''),
+                        price=request.POST.get(f'variant_price_{variant_index}') or None,
+                        quantity=int(request.POST.get(f'variant_quantity_{variant_index}', 0))
+                    )
+                    
+                    # Handle variant image
+                    variant_image = request.FILES.get(f'variant_image_{variant_index}')
+                    if variant_image:
+                        variant.image = variant_image
+                        variant.save()
+                        
+                variant_index += 1
+            
             messages.success(request, 'Product added successfully!')
             return redirect('dashboard')
     else:
@@ -83,12 +104,24 @@ def add_product(request):
 
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id, shop__is_active=True)
+    variant_id = request.POST.get('variant_id') if request.method == 'POST' else None
+    variant = None
+    
+    if variant_id:
+        variant = get_object_or_404(ProductVariant, id=variant_id, product=product)
+        if variant.is_out_of_stock:
+            messages.error(request, f'{variant.name} is out of stock!')
+            return redirect('product_detail', product_id=product_id)
+    elif product.has_variants:
+        messages.error(request, 'Please select a variant!')
+        return redirect('product_detail', product_id=product_id)
     
     if request.user.is_authenticated:
         cart, created = Cart.objects.get_or_create(user=request.user)
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
+            variant=variant,
             defaults={'quantity': 1}
         )
         
@@ -96,17 +129,21 @@ def add_to_cart(request, product_id):
             cart_item.quantity += 1
             cart_item.save()
         
-        messages.success(request, f'Added {product.name} to cart!')
+        variant_name = f' - {variant.name}' if variant else ''
+        messages.success(request, f'Added {product.name}{variant_name} to cart!')
     else:
         # Handle guest cart using session
+        cart_key = f"{product_id}_{variant_id}" if variant_id else str(product_id)
         cart_items = request.session.get('cart', {})
-        if str(product_id) in cart_items:
-            cart_items[str(product_id)] += 1
+        if cart_key in cart_items:
+            cart_items[cart_key] += 1
         else:
-            cart_items[str(product_id)] = 1
+            cart_items[cart_key] = 1
         request.session['cart'] = cart_items
         request.session.modified = True
-        messages.success(request, f'Added {product.name} to cart!')
+        
+        variant_name = f' - {variant.name}' if variant else ''
+        messages.success(request, f'Added {product.name}{variant_name} to cart!')
     
     return redirect('home')
 
@@ -222,6 +259,49 @@ def edit_product(request, product_id):
             images = request.FILES.getlist('images')
             for image in images:
                 ProductImage.objects.create(product=product, image=image)
+            
+            # Handle existing variant updates
+            for variant in product.variants.all():
+                variant_id = variant.id
+                
+                # Check if variant should be deleted
+                if request.POST.get(f'delete_variant_{variant_id}'):
+                    variant.delete()
+                    continue
+                
+                # Update existing variant
+                variant.name = request.POST.get(f'existing_variant_name_{variant_id}', variant.name)
+                variant.sku = request.POST.get(f'existing_variant_sku_{variant_id}', variant.sku)
+                variant.price = request.POST.get(f'existing_variant_price_{variant_id}') or None
+                variant.quantity = int(request.POST.get(f'existing_variant_quantity_{variant_id}', variant.quantity))
+                
+                # Handle variant image update
+                variant_image = request.FILES.get(f'existing_variant_image_{variant_id}')
+                if variant_image:
+                    variant.image = variant_image
+                
+                variant.save()
+            
+            # Handle new variants
+            variant_index = 0
+            while f'variant_name_{variant_index}' in request.POST:
+                variant_name = request.POST.get(f'variant_name_{variant_index}')
+                if variant_name:
+                    variant = ProductVariant.objects.create(
+                        product=product,
+                        name=variant_name,
+                        sku=request.POST.get(f'variant_sku_{variant_index}', ''),
+                        price=request.POST.get(f'variant_price_{variant_index}') or None,
+                        quantity=int(request.POST.get(f'variant_quantity_{variant_index}', 0))
+                    )
+                    
+                    # Handle variant image
+                    variant_image = request.FILES.get(f'variant_image_{variant_index}')
+                    if variant_image:
+                        variant.image = variant_image
+                        variant.save()
+                        
+                variant_index += 1
             
             messages.success(request, 'Product updated successfully!')
             return redirect('product_detail', product_id=product.id)

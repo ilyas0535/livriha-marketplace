@@ -113,7 +113,7 @@ def create_order(request):
                     product=item.product,
                     variant=getattr(item, 'variant', None),
                     quantity=item.quantity,
-                    price=item.product.price
+                    price=item.unit_price
                 )
                 # Update product quantity
                 item.product.quantity -= item.quantity
@@ -302,41 +302,65 @@ def checkout(request):
 
 def buy_now(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+    variant_id = request.POST.get('variant_id') if request.method == 'POST' else None
+    variant = None
     
     # Check if user is product owner
     if request.user.is_authenticated and hasattr(request.user, 'shop') and product.shop == request.user.shop:
         messages.info(request, 'You cannot buy your own product.')
         return redirect('edit_product', product_id=product.id)
     
-    if product.is_out_of_stock:
-        messages.error(request, 'Product is out of stock')
-        return redirect('home')
+    # Handle variant selection
+    if variant_id:
+        from products.models import ProductVariant
+        variant = get_object_or_404(ProductVariant, id=variant_id, product=product)
+        if variant.is_out_of_stock:
+            messages.error(request, f'{variant.name} is out of stock')
+            return redirect('product_detail', product_id=product_id)
+        effective_price = variant.effective_price
+    elif product.has_variants and request.method == 'POST':
+        messages.error(request, 'Please select a variant!')
+        return redirect('product_detail', product_id=product_id)
+    elif not product.has_variants:
+        if product.is_out_of_stock:
+            messages.error(request, 'Product is out of stock')
+            return redirect('home')
+        effective_price = product.price
+        variant = None
+    else:
+        # GET request - show buy now form
+        effective_price = product.price
+        variant = None
     
     # Create single item checkout
     shops_items = {
         product.shop: [{
             'product': product,
-            'quantity': 1
+            'variant': variant,
+            'quantity': 1,
+            'price': effective_price
         }]
     }
     
-    if request.method == 'POST':
+    # Only process order if coming from buy_now form with customer details
+    if request.method == 'POST' and request.POST.get('full_name'):
         if not request.user.is_authenticated:
             email = request.POST.get('email')
             if not email:
                 messages.error(request, 'Email is required for checkout')
                 return render(request, 'orders/buy_now.html', {'shops_items': shops_items, 'product': product})
         
-        payment_method = request.POST.get('payment_method')
+        payment_method = request.POST.get('payment_method', 'cash_on_delivery')
         
         # Create order directly
         order_data = {
             'shop': product.shop,
-            'total_amount': product.price,
+            'total_amount': effective_price,
             'customer_name': request.POST.get('full_name', ''),
             'customer_email': request.POST.get('email', ''),
             'customer_phone': request.POST.get('phone', ''),
-            'customer_address': request.POST.get('address', '')
+            'customer_address': request.POST.get('address', ''),
+            'payment_method': payment_method
         }
         
         if request.user.is_authenticated:
@@ -344,20 +368,15 @@ def buy_now(request, product_id):
         
         order = Order.objects.create(**order_data)
         
-        # Save payment method
-        order.payment_method = payment_method
-        order.save()
-        
         OrderItem.objects.create(
             order=order,
             product=product,
+            product_variant=variant,
             quantity=1,
-            price=product.price
+            price=effective_price
         )
         
-        # Update stock
-        product.quantity -= 1
-        product.save()
+        # Update stock (handled automatically by OrderItem.save())
         
         # Check for low stock
         if product.is_low_stock:
@@ -396,4 +415,9 @@ def buy_now(request, product_id):
         else:
             return redirect('payment_gateway', order_id=order.id, payment_method=payment_method)
     
-    return render(request, 'orders/buy_now.html', {'shops_items': shops_items, 'product': product})
+    return render(request, 'orders/buy_now.html', {
+        'shops_items': shops_items, 
+        'product': product, 
+        'selected_variant': variant,
+        'effective_price': effective_price
+    })

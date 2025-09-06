@@ -98,6 +98,38 @@ class Product(models.Model):
         from orders.models import OrderItem
         from django.db.models import Sum
         return OrderItem.objects.filter(product=self).aggregate(total=Sum('quantity'))['total'] or 0
+    
+    def update_total_quantity(self):
+        """Update product quantity to sum of all variant quantities"""
+        total = sum(variant.quantity for variant in self.variants.all())
+        self.quantity = total
+        self.save(update_fields=['quantity'])
+    
+    @property
+    def has_variants(self):
+        return self.variants.exists()
+    
+    def get_all_images(self):
+        """Get all images including product images and variant images"""
+        all_images = []
+        
+        # Add product images
+        for img in self.images.all():
+            all_images.append({
+                'url': img.image.url,
+                'type': 'product',
+                'alt': self.name
+            })
+        
+        # Add variant images
+        for variant in self.variants.filter(image__isnull=False):
+            all_images.append({
+                'url': variant.image.url,
+                'type': 'variant',
+                'alt': f"{self.name} - {variant.name}"
+            })
+        
+        return all_images
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
@@ -106,10 +138,31 @@ class ProductImage(models.Model):
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)  # e.g., "Size", "Color"
-    value = models.CharField(max_length=100)  # e.g., "Large", "Red"
-    price_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    name = models.CharField(max_length=100)  # e.g., "Red - Large", "Blue - Medium"
+    sku = models.CharField(max_length=50, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=0)
+    attributes = models.JSONField(default=dict)  # e.g., {"color": "red", "size": "large"}
+    image = models.ImageField(upload_to='variants/', blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['product', 'name']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+    
+    @property
+    def effective_price(self):
+        return self.price if self.price else self.product.price
+    
+    @property
+    def is_out_of_stock(self):
+        return self.quantity == 0
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update product total quantity after saving variant
+        self.product.update_total_quantity()
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -128,4 +181,12 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
+    
+    @property
+    def unit_price(self):
+        return self.variant.effective_price if self.variant else self.product.price
+    
+    @property
+    def total(self):
+        return self.unit_price * self.quantity
 
