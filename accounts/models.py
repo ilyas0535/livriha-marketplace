@@ -4,6 +4,7 @@ from django.db import models
 class User(AbstractUser):
     is_seller = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)
+    verification_token = models.CharField(max_length=100, blank=True)
 
 class SupportMessage(models.Model):
     name = models.CharField(max_length=100)
