@@ -7,10 +7,11 @@ from django.conf import settings
 from django.urls import reverse
 from django.db.models import Q
 from django.http import JsonResponse
-from .models import User, SupportMessage
+from .models import User, SupportMessage, UserChat, UserMessage
 from shops.models import Shop
 from orders.models import Order, Notification
 from products.models import Product
+from django.db import models
 import uuid
 import requests
 import os
@@ -224,8 +225,7 @@ def dashboard(request):
         has_more = orders.count() > offset + limit
         
         # Calculate income by status
-        draft_income = sum(order.total_amount for order in orders if order.status == 'draft')
-        confirmed_income = sum(order.total_amount for order in orders if order.status == 'confirmed')
+        waiting_income = sum(order.total_amount for order in orders if order.status == 'waiting')
         sent_income = sum(order.total_amount for order in orders if order.status == 'sent')
         
         products = Product.objects.filter(shop=shop)
@@ -238,8 +238,7 @@ def dashboard(request):
             'status_filter': status_filter,
             'offset': offset,
             'has_more': has_more,
-            'draft_income': draft_income,
-            'confirmed_income': confirmed_income,
+            'waiting_income': waiting_income,
             'sent_income': sent_income,
             'total_orders': orders.count(),
             'products': products,
@@ -290,34 +289,11 @@ def shop_statistics(request):
     # Filter orders for the period
     orders = Order.objects.filter(shop=shop, created_at__date__range=[start_date, end_date])
     
-    # Calculate metrics
-    total_revenue = orders.filter(status__in=['confirmed', 'sent']).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_orders = orders.count()
-    avg_order_value = orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0
-    
-    # Previous period comparison
-    prev_start = start_date - timedelta(days=(end_date - start_date).days)
-    prev_end = start_date
-    prev_orders = Order.objects.filter(shop=shop, created_at__date__range=[prev_start, prev_end])
-    prev_revenue = prev_orders.filter(status__in=['confirmed', 'sent']).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    prev_order_count = prev_orders.count()
-    prev_aov = prev_orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0
-    
-    # Growth calculations
-    if prev_revenue > 0:
-        revenue_growth = ((total_revenue - prev_revenue) / prev_revenue * 100)
-    else:
-        revenue_growth = 100 if total_revenue > 0 else 0
-    
-    if prev_order_count > 0:
-        order_growth = ((total_orders - prev_order_count) / prev_order_count * 100)
-    else:
-        order_growth = 100 if total_orders > 0 else 0
-    
-    if prev_aov > 0:
-        aov_growth = ((avg_order_value - prev_aov) / prev_aov * 100)
-    else:
-        aov_growth = 100 if avg_order_value > 0 else 0
+    # Calculate revenue by status
+    waiting_revenue = orders.filter(status='waiting').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    sent_revenue = orders.filter(status='sent').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    cancelled_revenue = orders.filter(status='cancelled').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    returned_revenue = orders.filter(status='returned').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     
     # Chart data
     chart_labels = []
@@ -327,7 +303,7 @@ def shop_statistics(request):
         chart_labels.append(current_date.strftime('%m/%d'))
         day_revenue = orders.filter(
             created_at__date=current_date,
-            status__in=['confirmed', 'sent']
+            status__in=['waiting', 'sent']
         ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
         revenue_data.append(float(day_revenue))
         current_date += timedelta(days=1)
@@ -370,13 +346,10 @@ def shop_statistics(request):
         'period': period,
         'start_date': start_date,
         'end_date': end_date,
-        'total_revenue': total_revenue,
-        'total_orders': total_orders,
-        'avg_order_value': avg_order_value,
-        'revenue_growth': revenue_growth,
-        'order_growth': order_growth,
-        'aov_growth': aov_growth,
-        'conversion_rate': conversion_rate,
+        'waiting_revenue': waiting_revenue,
+        'sent_revenue': sent_revenue,
+        'cancelled_revenue': cancelled_revenue,
+        'returned_revenue': returned_revenue,
         'chart_labels': json.dumps(chart_labels),
         'revenue_data': json.dumps(revenue_data),
         'status_labels': json.dumps(status_labels),
@@ -426,8 +399,10 @@ def reply_support(request):
                 from orders.models import Notification
                 Notification.objects.create(
                     user=original_message.user,
+                    type='support_reply',
                     title='Support Reply',
-                    message=f'Admin replied to your message "{original_message.subject}": {reply_text[:100]}...'
+                    message=f'Admin replied to your message "{original_message.subject}": {reply_text[:100]}...',
+                    related_url='javascript:openSupportModal()'
                 )
                 return JsonResponse({'success': True, 'message': 'Reply sent as notification'})
             else:
@@ -517,12 +492,38 @@ def send_chat_message(request):
             from .models import ChatMessage
             
             if request.user == support_msg.user or request.user.email == 'protechdza@gmail.com':
+                is_admin = (request.user.email == 'protechdza@gmail.com')
                 ChatMessage.objects.create(
                     support_message=support_msg,
                     sender=request.user,
                     message=message,
-                    is_admin=(request.user.email == 'protechdza@gmail.com')
+                    is_admin=is_admin
                 )
+                
+                # Send notification to the other party
+                if is_admin and support_msg.user:
+                    # Admin sent message, notify customer
+                    Notification.objects.create(
+                        user=support_msg.user,
+                        type='support_reply',
+                        title='New Support Message',
+                        message=f'Support replied: {message[:100]}...',
+                        related_url='javascript:openSupportModal()'
+                    )
+                elif not is_admin:
+                    # Customer sent message, notify admin
+                    try:
+                        admin_user = User.objects.get(email='protechdza@gmail.com')
+                        Notification.objects.create(
+                            user=admin_user,
+                            type='support_reply',
+                            title='New Customer Message',
+                            message=f'{request.user.username}: {message[:100]}...',
+                            related_url='/accounts/support-messages/'
+                        )
+                    except User.DoesNotExist:
+                        pass
+                
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'success': False, 'message': 'Access denied'})
@@ -663,3 +664,145 @@ def send_broadcast(request):
     
     print("Invalid request method")
     return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+@login_required
+def start_user_chat(request):
+    if request.method == 'POST':
+        seller_id = request.POST.get('seller_id')
+        product_id = request.POST.get('product_id')
+        try:
+            seller = User.objects.get(id=seller_id)
+            product = None
+            if product_id:
+                from products.models import Product
+                product = Product.objects.get(id=product_id)
+            
+            # Try to find existing chat between these users (regardless of product)
+            existing_chat = UserChat.objects.filter(
+                Q(user1=request.user, user2=seller) | Q(user1=seller, user2=request.user)
+            ).first()
+            
+            if existing_chat:
+                chat = existing_chat
+            else:
+                chat = UserChat.objects.create(
+                    user1=request.user,
+                    user2=seller,
+                    product=product
+                )
+            return JsonResponse({'success': True, 'chat_id': chat.id})
+        except (User.DoesNotExist, Product.DoesNotExist):
+            return JsonResponse({'success': False})
+    return JsonResponse({'success': False})
+
+@login_required
+def send_user_message(request):
+    if request.method == 'POST':
+        chat_id = request.POST.get('chat_id')
+        message = request.POST.get('message')
+        
+        try:
+            chat = UserChat.objects.get(id=chat_id)
+            
+            if request.user in [chat.user1, chat.user2]:
+                # Determine receiver (the other user in the chat)
+                receiver = chat.user2 if chat.user1 == request.user else chat.user1
+                
+                UserMessage.objects.create(
+                    chat=chat,
+                    sender=request.user,
+                    receiver=receiver,
+                    message=message
+                )
+                return JsonResponse({'success': True})
+        except UserChat.DoesNotExist:
+            pass
+    return JsonResponse({'success': False})
+
+@login_required
+def get_user_messages(request):
+    chat_id = request.GET.get('chat_id')
+    try:
+        chat = UserChat.objects.get(id=chat_id)
+        if request.user in [chat.user1, chat.user2]:
+            messages = UserMessage.objects.filter(chat=chat).order_by('created_at')
+            message_data = []
+            for msg in messages:
+                message_data.append({
+                    'message': msg.message,
+                    'is_sender': msg.sender == request.user,
+                    'sender_name': msg.sender.username,
+                    'time': msg.created_at.strftime('%H:%M')
+                })
+            return JsonResponse({'messages': message_data})
+    except UserChat.DoesNotExist:
+        pass
+    return JsonResponse({'messages': []})
+
+@login_required
+def user_messages(request):
+    if not request.user.is_seller:
+        messages.error(request, 'Access denied')
+        return redirect('dashboard')
+    
+    # Get all chats where user is involved
+    chats = UserChat.objects.filter(
+        Q(user1=request.user) | Q(user2=request.user)
+    ).order_by('-created_at')
+    
+    chat_data = []
+    for chat in chats:
+        other_user = chat.user2 if chat.user1 == request.user else chat.user1
+        last_message = chat.messages.last()
+        
+        chat_data.append({
+            'chat': chat,
+            'other_user': other_user,
+            'last_message': last_message,
+        })
+    
+    return render(request, 'accounts/user_messages.html', {'chats': chat_data})
+
+@login_required
+def get_seller_messages(request):
+    if not request.user.is_seller:
+        return JsonResponse({'messages': [], 'unread_count': 0})
+    
+    # Get recent messages for seller
+    chats = UserChat.objects.filter(
+        Q(user1=request.user) | Q(user2=request.user)
+    ).order_by('-created_at')[:5]
+    
+    messages_data = []
+    total_unread = 0
+    
+    for chat in chats:
+        other_user = chat.user2 if chat.user1 == request.user else chat.user1
+        last_message = chat.messages.last()
+        
+        if last_message:
+            # Count unread messages
+            unread_count = chat.messages.filter(
+                receiver=request.user,
+                sender=other_user
+            ).count()
+            
+            # Create display name with product context
+            display_name = other_user.username
+            if chat.product:
+                display_name += f" (re: {chat.product.name})"
+            
+            messages_data.append({
+                'chat_id': chat.id,
+                'user': display_name,
+                'message': last_message.message[:50] + '...' if len(last_message.message) > 50 else last_message.message,
+                'time': last_message.created_at.strftime('%H:%M'),
+                'unread_count': unread_count
+            })
+            
+            total_unread += unread_count
+    
+    return JsonResponse({
+        'messages': messages_data,
+        'unread_count': total_unread
+    })

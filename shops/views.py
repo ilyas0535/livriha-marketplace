@@ -68,6 +68,7 @@ def shop_settings(request):
         checkout_methods = request.POST.getlist('checkout_methods')
         shop.checkout_methods = checkout_methods
         shop.order_reminder_period = request.POST.get('order_reminder_period', '1d')
+        shop.show_stock_to_customers = 'show_stock_to_customers' in request.POST
         
         shop.save()
         

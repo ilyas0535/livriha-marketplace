@@ -7,8 +7,7 @@ User = get_user_model()
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('confirmed', 'Confirmed'),
+        ('waiting', 'Waiting'),
         ('sent', 'Sent'),
         ('cancelled', 'Cancelled'),
         ('returned', 'Returned'),
@@ -17,7 +16,7 @@ class Order(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     order_number = models.CharField(max_length=20, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Customer information for guest users
@@ -70,6 +69,8 @@ class Notification(models.Model):
         ('new_order', 'New Order'),
         ('low_stock', 'Low Stock'),
         ('order_update', 'Order Update'),
+        ('support_reply', 'Support Reply'),
+        ('general', 'General'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -78,6 +79,23 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Link to related objects
+    related_order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
+    related_product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    related_url = models.CharField(max_length=500, blank=True)  # Custom URL for other objects
+    
+    def get_redirect_url(self):
+        if self.related_order:
+            return f'/accounts/dashboard/?order={self.related_order.id}'
+        elif self.related_product:
+            return f'/products/{self.related_product.id}/'
+        elif self.related_url:
+            if self.related_url.startswith('javascript:'):
+                return '/accounts/dashboard/?open_support=1'
+            return self.related_url
+        else:
+            return '/accounts/dashboard/'
 
     def __str__(self):
         return f"{self.title} - {self.user.username}"

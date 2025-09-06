@@ -33,3 +33,22 @@ class ChatMessage(models.Model):
     
     def __str__(self):
         return f"{self.sender.username}: {self.message[:50]}"
+
+class UserChat(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats_as_user2')
+    product = models.ForeignKey('products.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user1', 'user2', 'product']
+
+class UserMessage(models.Model):
+    chat = models.ForeignKey(UserChat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']

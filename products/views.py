@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from .models import Product, Category, Wishlist, Cart, CartItem, ProductImage
 from .forms import ProductForm
 from shops.models import Shop
@@ -78,25 +79,7 @@ def add_product(request):
     
     return render(request, 'products/add.html', {'form': form})
 
-@login_required
-@require_POST
-def add_to_wishlist(request, product_id):
-    product = get_object_or_404(Product, id=product_id, shop__is_active=True)
-    wishlist_item, created = Wishlist.objects.get_or_create(
-        user=request.user,
-        product=product
-    )
-    
-    if created:
-        return JsonResponse({'status': 'added', 'message': 'Added to wishlist'})
-    else:
-        wishlist_item.delete()
-        return JsonResponse({'status': 'removed', 'message': 'Removed from wishlist'})
 
-@login_required
-def wishlist(request):
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
-    return render(request, 'products/wishlist.html', {'wishlist_items': wishlist_items})
 
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id, shop__is_active=True)
@@ -126,6 +109,30 @@ def add_to_cart(request, product_id):
         messages.success(request, f'Added {product.name} to cart!')
     
     return redirect('home')
+
+def add_to_wishlist(request, product_id):
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please login to add to wishlist')
+        return redirect('login')
+        
+    product = get_object_or_404(Product, id=product_id)
+    wishlist_item, created = Wishlist.objects.get_or_create(
+        user=request.user,
+        product=product
+    )
+    
+    if created:
+        messages.success(request, f'Added {product.name} to wishlist!')
+    else:
+        wishlist_item.delete()
+        messages.success(request, f'Removed {product.name} from wishlist!')
+    
+    return redirect('product_detail', product_id=product_id)
+
+@login_required
+def wishlist(request):
+    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
+    return render(request, 'products/wishlist.html', {'wishlist_items': wishlist_items})
 
 def cart_view(request):
     cart_items = []

@@ -98,7 +98,18 @@
                         </div>
                     {% endif %}
                     {% if user.is_authenticated and user.shop != product.shop %}
-                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn btn-outline-secondary btn-sm">♡</a>
+                        <div class="d-flex gap-1 mt-1">
+                            <a href="{% url 'add_to_wishlist' product.id %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="far fa-heart"></i> Wishlist
+                            </a>
+                            <button class="btn btn-outline-primary btn-sm" onclick="openUserChat({{ product.shop.owner.id }}, '{{ product.shop.name }}', {{ product.id }})">
+                                <i class="fas fa-comments"></i>
+                            </button>
+                        </div>
+                    {% elif not user.is_authenticated %}
+                        <button class="btn btn-outline-primary btn-sm mt-1" onclick="showLoginPrompt()">
+                            <i class="fas fa-comments"></i> Chat
+                        </button>
                     {% endif %}
                 </div>
             </div>
@@ -227,6 +238,28 @@ function rateShop(shopId, rating) {
         body: `rating=${rating}`
     }).then(() => {
         location.reload();
+    });
+}
+
+function showLoginPrompt() {
+    alert('Please login to chat with the seller.');
+    window.location.href = '/accounts/login/';
+}
+
+function openUserChat(sellerId, shopName, productId) {
+    fetch('/accounts/start-user-chat/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `seller_id=${sellerId}&product_id=${productId || ''}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            openChatWindow(data.chat_id, shopName, sellerId);
+        }
     });
 }
 </script>

@@ -37,6 +37,7 @@ class Shop(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    show_stock_to_customers = models.BooleanField(default=False)
     
     def save(self, *args, **kwargs):
         if not self.slug:

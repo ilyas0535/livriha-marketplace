@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2><i class="fas fa-comments text-warning me-2"></i>Customer Messages</h2>
+
+{% if chats %}
+    <div class="row">
+        {% for chat_info in chats %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>{{ chat_info.other_user.username }}
+                    </h6>
+                    <small class="text-muted">
+                        {% if chat_info.last_message %}
+                            {{ chat_info.last_message.created_at|date:"M d, H:i" }}
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="card-body">
+                    {% if chat_info.last_message %}
+                        <p class="card-text">{{ chat_info.last_message.message|truncatechars:100 }}</p>
+                    {% else %}
+                        <p class="text-muted">No messages yet</p>
+                    {% endif %}
+                    <button class="btn btn-primary btn-sm" onclick="openUserChat({{ chat_info.other_user.id }}, '{{ chat_info.other_user.username }}')">
+                        <i class="fas fa-reply me-1"></i>Reply
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <h5>No messages yet</h5>
+        <p>Customer messages will appear here when they contact you.</p>
+    </div>
+{% endif %}
+
+<script>
+function openUserChat(userId, username) {
+    // Use the same chat function from product detail
+    fetch('/accounts/start-user-chat/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `seller_id=${userId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            openChatWindow(data.chat_id, username, userId);
+        }
+    });
+}
+
+function openChatWindow(chatId, username, userId) {
+    const existingWindow = document.getElementById(`chat-window-${chatId}`);
+    if (existingWindow) {
+        existingWindow.style.display = 'block';
+        return;
+    }
+    
+    const chatWindow = document.createElement('div');
+    chatWindow.id = `chat-window-${chatId}`;
+    chatWindow.className = 'position-fixed bg-white border rounded shadow';
+    chatWindow.style.cssText = `
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        height: 400px;
+        z-index: 1060;
+    `;
+    
+    chatWindow.innerHTML = `
+        <div class="bg-primary text-white p-2 d-flex justify-content-between align-items-center">
+            <span class="fw-bold">${username}</span>
+            <div>
+                <button class="btn btn-sm btn-outline-light me-1" onclick="collapseChatWindow('${chatId}', '${username}')">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-light" onclick="closeChatWindow('${chatId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-2" style="height: 300px; overflow-y: auto; background: #f8f9fa;" id="chatMessages-${chatId}">
+        </div>
+        <div class="p-2 border-top">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="chatInput-${chatId}" placeholder="Type message...">
+                <button class="btn btn-primary" onclick="sendUserMessage('${chatId}', ${userId})">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(chatWindow);
+    loadUserChatMessages(chatId);
+    
+    // Auto-refresh messages every 3 seconds
+    const refreshInterval = setInterval(() => {
+        if (document.getElementById(`chat-window-${chatId}`).style.display !== 'none') {
+            loadUserChatMessages(chatId);
+        } else {
+            clearInterval(refreshInterval);
+        }
+    }, 3000);
+    
+    document.getElementById(`chatInput-${chatId}`).addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendUserMessage(chatId, userId);
+        }
+    });
+}
+
+function closeChatWindow(chatId) {
+    const window = document.getElementById(`chat-window-${chatId}`);
+    const bubble = document.getElementById(`chat-bubble-${chatId}`);
+    if (window) {
+        window.remove();
+    }
+    if (bubble) {
+        bubble.remove();
+    }
+}
+
+function collapseChatWindow(chatId, username) {
+    const window = document.getElementById(`chat-window-${chatId}`);
+    if (window) {
+        window.style.display = 'none';
+        createChatBubble(chatId, username);
+    }
+}
+
+function createChatBubble(chatId, username) {
+    const existingBubble = document.getElementById(`chat-bubble-${chatId}`);
+    if (existingBubble) return;
+    
+    const existingBubbles = document.querySelectorAll('[id^="chat-bubble-"]');
+    const bubbleIndex = existingBubbles.length;
+    
+    const bubble = document.createElement('div');
+    bubble.id = `chat-bubble-${chatId}`;
+    bubble.className = 'position-fixed bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow';
+    bubble.style.cssText = `
+        bottom: 20px;
+        right: ${90 + (bubbleIndex * 70)}px;
+        width: 60px;
+        height: 60px;
+        z-index: 1050;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    `;
+    
+    bubble.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-comment fa-lg"></i>
+            <div style="font-size: 10px; font-weight: bold;">${username.charAt(0).toUpperCase()}</div>
+        </div>
+    `;
+    
+    bubble.onclick = () => expandChatFromBubble(chatId, username);
+    bubble.onmouseenter = () => {
+        bubble.style.transform = 'scale(1.1)';
+        bubble.style.backgroundColor = '#0056b3';
+    };
+    bubble.onmouseleave = () => {
+        bubble.style.transform = 'scale(1)';
+        bubble.style.backgroundColor = '#007bff';
+    };
+    
+    document.body.appendChild(bubble);
+}
+
+function expandChatFromBubble(chatId, username) {
+    const bubble = document.getElementById(`chat-bubble-${chatId}`);
+    if (bubble) {
+        bubble.remove();
+    }
+    openChatWindow(chatId, username, 0);
+}
+
+function sendUserMessage(chatId, receiverId) {
+    const input = document.getElementById(`chatInput-${chatId}`);
+    const message = input.value.trim();
+    if (!message) return;
+    
+    fetch('/accounts/send-user-message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `chat_id=${chatId}&message=${encodeURIComponent(message)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            loadUserChatMessages(chatId);
+        }
+    });
+}
+
+function loadUserChatMessages(chatId) {
+    fetch(`/accounts/get-user-messages/?chat_id=${chatId}`)
+    .then(response => response.json())
+    .then(data => {
+        const chatDiv = document.getElementById(`chatMessages-${chatId}`);
+        if (!chatDiv) return;
+        
+        chatDiv.innerHTML = '';
+        
+        data.messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `mb-2 ${msg.is_sender ? 'text-end' : 'text-start'}`;
+            msgDiv.innerHTML = `
+                <div class="d-inline-block p-3 ${msg.is_sender ? 'text-white' : 'bg-white'}" style="max-width: 75%; word-wrap: break-word; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); ${msg.is_sender ? 'background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;' : 'color: #000 !important; border: 1px solid #e9ecef;'}">
+                    <div style="${msg.is_sender ? 'color: #fff !important;' : 'color: #000 !important;'} font-size: 14px; line-height: 1.4;">${msg.message}</div>
+                    <div style="${msg.is_sender ? 'color: rgba(255,255,255,0.8) !important;' : 'color: #6c757d !important;'} font-size: 11px; margin-top: 4px; text-align: right;">${msg.time}</div>
+                </div>
+            `;
+            chatDiv.appendChild(msgDiv);
+        });
+        
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    });
+}
+</script>
+{% endblock %}

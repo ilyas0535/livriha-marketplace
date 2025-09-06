@@ -33,7 +33,7 @@ def upload_payment_proof(request, order_id):
 
 def payment_success(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    order.status = 'confirmed'
+    order.status = 'waiting'
     order.save()
     
     messages.success(request, f'Payment successful! Order #{order.order_number} has been confirmed.')
@@ -211,6 +211,12 @@ def update_order_status(request, order_id):
         if old_status != new_status:
             order.status = new_status
             order.save()
+            
+            # Restore inventory for cancelled or returned orders
+            if new_status in ['cancelled', 'returned']:
+                for item in order.items.all():
+                    item.product.quantity += item.quantity
+                    item.product.save()
             
             # Save status history
             from .models import OrderStatusHistory

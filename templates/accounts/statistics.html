@@ -47,71 +47,45 @@
     </div>
 </div>
 
-<!-- Key Metrics -->
+<!-- Revenue by Status -->
 <div class="row mb-4 g-3">
     <div class="col-md-3">
         <div class="card text-center border-0 shadow-sm metric-card">
-            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="text-white">
-                    <i class="fas fa-dollar-sign fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">${{ total_revenue|floatformat:2 }}</h3>
-                    <p class="mb-2 fw-bold">Total Revenue</p>
-                    <span class="badge bg-light text-dark">
-                        {% if revenue_growth >= 0 %}
-                            <i class="fas fa-arrow-up text-success"></i> +{{ revenue_growth|floatformat:1 }}%
-                        {% else %}
-                            <i class="fas fa-arrow-down text-danger"></i> {{ revenue_growth|floatformat:1 }}%
-                        {% endif %}
-                    </span>
-                </div>
+            <div class="card-body" style="background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%); color: #000 !important;">
+                <i class="fas fa-clock fa-2x mb-2" style="color: #000 !important;"></i>
+                <h3 class="mb-1" style="color: #000 !important;">${{ waiting_revenue|floatformat:2 }}</h3>
+                <p class="mb-2 fw-bold" style="color: #000 !important;">Waiting Orders</p>
+                <small style="color: #333 !important;">Pending Revenue</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center border-0 shadow-sm metric-card">
-            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="text-white">
-                    <i class="fas fa-shopping-bag fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">{{ total_orders }}</h3>
-                    <p class="mb-2 fw-bold">Total Orders</p>
-                    <span class="badge bg-light text-dark">
-                        {% if order_growth >= 0 %}
-                            <i class="fas fa-arrow-up text-success"></i> +{{ order_growth|floatformat:1 }}%
-                        {% else %}
-                            <i class="fas fa-arrow-down text-danger"></i> {{ order_growth|floatformat:1 }}%
-                        {% endif %}
-                    </span>
-                </div>
+            <div class="card-body" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: #fff !important;">
+                <i class="fas fa-shipping-fast fa-2x mb-2" style="color: #fff !important;"></i>
+                <h3 class="mb-1" style="color: #fff !important;">${{ sent_revenue|floatformat:2 }}</h3>
+                <p class="mb-2 fw-bold" style="color: #fff !important;">Sent Orders</p>
+                <small style="color: #e6f3ff !important;">Completed Revenue</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center border-0 shadow-sm metric-card">
-            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <div class="text-white">
-                    <i class="fas fa-chart-line fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">${{ avg_order_value|floatformat:2 }}</h3>
-                    <p class="mb-2 fw-bold">Avg Order Value</p>
-                    <span class="badge bg-light text-dark">
-                        {% if aov_growth >= 0 %}
-                            <i class="fas fa-arrow-up text-success"></i> +{{ aov_growth|floatformat:1 }}%
-                        {% else %}
-                            <i class="fas fa-arrow-down text-danger"></i> {{ aov_growth|floatformat:1 }}%
-                        {% endif %}
-                    </span>
-                </div>
+            <div class="card-body" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #fff !important;">
+                <i class="fas fa-times-circle fa-2x mb-2" style="color: #fff !important;"></i>
+                <h3 class="mb-1" style="color: #fff !important;">${{ cancelled_revenue|floatformat:2 }}</h3>
+                <p class="mb-2 fw-bold" style="color: #fff !important;">Cancelled Orders</p>
+                <small style="color: #ffcccc !important;">Lost Revenue</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center border-0 shadow-sm metric-card">
-            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                <div class="text-white">
-                    <i class="fas fa-percentage fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">{{ conversion_rate|floatformat:1 }}%</h3>
-                    <p class="mb-2 fw-bold">Conversion Rate</p>
-                    <small class="opacity-75">Orders / Product Views</small>
-                </div>
+            <div class="card-body" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: #fff !important;">
+                <i class="fas fa-undo fa-2x mb-2" style="color: #fff !important;"></i>
+                <h3 class="mb-1" style="color: #fff !important;">${{ returned_revenue|floatformat:2 }}</h3>
+                <p class="mb-2 fw-bold" style="color: #fff !important;">Returned Orders</p>
+                <small style="color: #e6e6e6 !important;">Refunded Revenue</small>
             </div>
         </div>
     </div>

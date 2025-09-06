@@ -36,6 +36,21 @@
             </div>
         </div>
     </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Stock Display Settings</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="show_stock_to_customers" id="show_stock" {% if shop.show_stock_to_customers %}checked{% endif %}>
+                <label class="form-check-label" for="show_stock">
+                    Show exact stock quantities to customers
+                </label>
+                <div class="form-text">When enabled, customers will see "X left" instead of just "Low Stock" status</div>
+            </div>
+        </div>
+    </div>
 
     
     <div class="mt-3">

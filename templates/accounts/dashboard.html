@@ -69,8 +69,7 @@
                         <div class="col-md-4">
                             <select name="status" class="form-select">
                                 <option value="">All Status</option>
-                                <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
-                                <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="waiting" {% if status_filter == 'waiting' %}selected{% endif %}>Waiting</option>
                                 <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
                                 <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
                                 <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
@@ -92,7 +91,7 @@
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <span class="fw-bold text-success">${{ order.total_amount }}</span>
                                 <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
-                                <span class="badge bg-{% if order.status == 'confirmed' %}success{% elif order.status == 'sent' %}info{% elif order.status == 'cancelled' %}danger{% elif order.status == 'returned' %}secondary{% else %}warning{% endif %}">
+                                <span class="badge bg-{% if order.status == 'waiting' %}warning{% elif order.status == 'sent' %}info{% elif order.status == 'cancelled' %}danger{% elif order.status == 'returned' %}secondary{% else %}primary{% endif %}">
                                     {{ order.get_status_display }}
                                 </span>
                             </div>
@@ -144,13 +143,8 @@
                             <div class="d-flex flex-wrap gap-1">
                                 <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
                                     {% csrf_token %}
-                                    <input type="hidden" name="status" value="draft">
-                                    <button type="submit" class="btn btn-sm {% if order.status == 'draft' %}btn-warning{% else %}btn-outline-warning{% endif %}">Draft</button>
-                                </form>
-                                <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="status" value="confirmed">
-                                    <button type="submit" class="btn btn-sm {% if order.status == 'confirmed' %}btn-success{% else %}btn-outline-success{% endif %}">Confirmed</button>
+                                    <input type="hidden" name="status" value="waiting">
+                                    <button type="submit" class="btn btn-sm {% if order.status == 'waiting' %}btn-warning{% else %}btn-outline-warning{% endif %}">Waiting</button>
                                 </form>
                                 <form method="post" action="{% url 'update_order_status' order.id %}" class="d-inline">
                                     {% csrf_token %}
@@ -280,6 +274,18 @@ window.addEventListener('DOMContentLoaded', function() {
                 orderElement.scrollIntoView({ behavior: 'smooth' });
             }, 100);
         }
+    }
+    
+    // Auto-open support modal if URL parameter exists
+    const openSupport = urlParams.get('open_support');
+    if (openSupport === '1') {
+        setTimeout(() => {
+            const supportModal = document.getElementById('supportModal');
+            if (supportModal) {
+                const modal = new bootstrap.Modal(supportModal);
+                modal.show();
+            }
+        }, 500);
     }
 });
 </script>

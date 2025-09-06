@@ -3,36 +3,21 @@
 {% block content %}
 <h2>My Wishlist</h2>
 
-{% if items %}
+{% if wishlist_items %}
     <div class="row">
-        {% for item in items %}
+        {% for item in wishlist_items %}
         <div class="col-md-4 mb-4">
             <div class="card">
                 {% if item.product.images.first %}
-                    <img src="{{ item.product.images.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                    <img src="{{ item.product.images.first.image.url }}" class="card-img-top" style="height: 200px; object-fit: contain;">
                 {% endif %}
                 <div class="card-body">
-                    <h5 class="card-title"><a href="{% url 'product_detail' item.product.id %}" class="text-decoration-none text-dark">{{ item.product.name }}</a></h5>
-                    {% if item.product.average_rating > 0 %}
-                        <div class="text-warning mb-2">
-                            {% for i in "12345" %}
-                                {% if forloop.counter <= item.product.average_rating %}
-                                    <i class="fas fa-star" style="font-size: 14px;"></i>
-                                {% else %}
-                                    <i class="far fa-star" style="font-size: 14px;"></i>
-                                {% endif %}
-                            {% endfor %}
-                            <small class="text-muted">({{ item.product.rating_count }})</small>
-                        </div>
-                    {% endif %}
+                    <h5 class="card-title">{{ item.product.name }}</h5>
                     <p class="card-text">${{ item.product.price }}</p>
-                    <div class="d-flex justify-content-between">
-                        {% if not item.product.is_out_of_stock %}
-                            <a href="{% url 'add_to_cart' item.product.id %}" class="btn btn-primary btn-sm">Add to Cart</a>
-                        {% else %}
-                            <span class="badge bg-danger">Out of Stock</span>
-                        {% endif %}
-                        <a href="{% url 'remove_from_wishlist' item.product.id %}" class="btn btn-outline-danger btn-sm">Remove</a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'product_detail' item.product.id %}" class="btn btn-primary btn-sm">View</a>
+                        <a href="{% url 'add_to_cart' item.product.id %}" class="btn btn-success btn-sm">Add to Cart</a>
+                        <a href="{% url 'add_to_wishlist' item.product.id %}" class="btn btn-outline-danger btn-sm">Remove</a>
                     </div>
                 </div>
             </div>
