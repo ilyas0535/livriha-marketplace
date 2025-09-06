@@ -23,6 +23,11 @@ class ProductForm(forms.ModelForm):
         help_text='Select multiple images for your product'
     )
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Category
+        self.fields['category'].choices = [('', 'Select Category')] + [(choice[0], choice[1]) for choice in Category.CATEGORY_CHOICES]
+    
     class Meta:
         model = Product
         fields = ['name', 'description', 'category', 'price', 'old_price', 'quantity', 'low_stock_threshold']

@@ -1,29 +1,61 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2>Register</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required>
+<div class="row justify-content-center" style="min-height: calc(100vh - 200px); display: flex; align-items: center;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                {% if upgrade_mode %}
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-success">Upgrade to Seller</h2>
+                        <p class="text-muted">Start your business journey today</p>
+                    </div>
+                    
+                    <div class="alert alert-info border-0 bg-light">
+                        <i class="fas fa-store me-2"></i>
+                        Upgrade your account to start selling products and create your own shop!
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-arrow-up me-2"></i>Upgrade to Seller Account
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">Join Livriha</h2>
+                        <p class="text-muted">Create your seller account and start your business</p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email" class="form-control form-control-lg" placeholder="Enter your email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Username</label>
+                            <input type="text" name="username" class="form-control form-control-lg" placeholder="Choose a username" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Password</label>
+                            <input type="password" name="password" class="form-control form-control-lg" placeholder="Create a password" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a href="{% url 'login' %}" class="text-primary fw-semibold text-decoration-none">Log in</a></p>
+                    </div>
+                {% endif %}
             </div>
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" name="username" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" name="is_seller" class="form-check-input">
-                <label class="form-check-label">I want to sell products</label>
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

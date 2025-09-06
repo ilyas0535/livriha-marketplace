@@ -2,36 +2,45 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-chart-line"></i> Business Statistics - {{ shop.name }}</h2>
-    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    <div>
+        <h2 class="mb-0"><i class="fas fa-chart-line text-warning me-2"></i>Business Analytics</h2>
+        <small class="text-muted">{{ shop.name }} Performance Dashboard</small>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+    </a>
 </div>
 
 <!-- Time Period Filter -->
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="fas fa-calendar-alt text-warning me-2"></i>Time Period Filter</h6>
+    </div>
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">Period</label>
+                <label class="form-label fw-bold">Period</label>
                 <select name="period" class="form-select" onchange="this.form.submit()">
-                    <option value="7" {% if period == '7' %}selected{% endif %}>Last 7 Days</option>
-                    <option value="30" {% if period == '30' %}selected{% endif %}>Last 30 Days</option>
-                    <option value="90" {% if period == '90' %}selected{% endif %}>Last 3 Months</option>
-                    <option value="365" {% if period == '365' %}selected{% endif %}>Last Year</option>
-                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+                    <option value="7" {% if period == '7' %}selected{% endif %}>📅 Last 7 Days</option>
+                    <option value="30" {% if period == '30' %}selected{% endif %}>📊 Last 30 Days</option>
+                    <option value="90" {% if period == '90' %}selected{% endif %}>📈 Last 3 Months</option>
+                    <option value="365" {% if period == '365' %}selected{% endif %}>🗓️ Last Year</option>
+                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>🎯 Custom Range</option>
                 </select>
             </div>
             {% if period == 'custom' %}
             <div class="col-md-3">
-                <label class="form-label">From Date</label>
+                <label class="form-label fw-bold">From Date</label>
                 <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">To Date</label>
+                <label class="form-label fw-bold">To Date</label>
                 <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <button type="submit" class="btn btn-primary d-block">Apply</button>
+                <button type="submit" class="btn btn-warning w-100">
+                    <i class="fas fa-search me-1"></i>Apply Filter
+                </button>
             </div>
             {% endif %}
         </form>
@@ -39,40 +48,70 @@
 </div>
 
 <!-- Key Metrics -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
     <div class="col-md-3">
-        <div class="card text-center bg-primary text-white">
-            <div class="card-body">
-                <h3>${{ total_revenue|floatformat:2 }}</h3>
-                <p class="mb-0">Total Revenue</p>
-                <small>{% if revenue_growth >= 0 %}+{% endif %}{{ revenue_growth|floatformat:1 }}% vs previous period</small>
+        <div class="card text-center border-0 shadow-sm metric-card">
+            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="text-white">
+                    <i class="fas fa-dollar-sign fa-2x mb-2 opacity-75"></i>
+                    <h3 class="mb-1">${{ total_revenue|floatformat:2 }}</h3>
+                    <p class="mb-2 fw-bold">Total Revenue</p>
+                    <span class="badge bg-light text-dark">
+                        {% if revenue_growth >= 0 %}
+                            <i class="fas fa-arrow-up text-success"></i> +{{ revenue_growth|floatformat:1 }}%
+                        {% else %}
+                            <i class="fas fa-arrow-down text-danger"></i> {{ revenue_growth|floatformat:1 }}%
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-success text-white">
-            <div class="card-body">
-                <h3>{{ total_orders }}</h3>
-                <p class="mb-0">Total Orders</p>
-                <small>{% if order_growth >= 0 %}+{% endif %}{{ order_growth|floatformat:1 }}% vs previous period</small>
+        <div class="card text-center border-0 shadow-sm metric-card">
+            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="text-white">
+                    <i class="fas fa-shopping-bag fa-2x mb-2 opacity-75"></i>
+                    <h3 class="mb-1">{{ total_orders }}</h3>
+                    <p class="mb-2 fw-bold">Total Orders</p>
+                    <span class="badge bg-light text-dark">
+                        {% if order_growth >= 0 %}
+                            <i class="fas fa-arrow-up text-success"></i> +{{ order_growth|floatformat:1 }}%
+                        {% else %}
+                            <i class="fas fa-arrow-down text-danger"></i> {{ order_growth|floatformat:1 }}%
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-info text-white">
-            <div class="card-body">
-                <h3>${{ avg_order_value|floatformat:2 }}</h3>
-                <p class="mb-0">Avg Order Value</p>
-                <small>{% if aov_growth >= 0 %}+{% endif %}{{ aov_growth|floatformat:1 }}% vs previous period</small>
+        <div class="card text-center border-0 shadow-sm metric-card">
+            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="text-white">
+                    <i class="fas fa-chart-line fa-2x mb-2 opacity-75"></i>
+                    <h3 class="mb-1">${{ avg_order_value|floatformat:2 }}</h3>
+                    <p class="mb-2 fw-bold">Avg Order Value</p>
+                    <span class="badge bg-light text-dark">
+                        {% if aov_growth >= 0 %}
+                            <i class="fas fa-arrow-up text-success"></i> +{{ aov_growth|floatformat:1 }}%
+                        {% else %}
+                            <i class="fas fa-arrow-down text-danger"></i> {{ aov_growth|floatformat:1 }}%
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-warning text-white">
-            <div class="card-body">
-                <h3>{{ conversion_rate|floatformat:1 }}%</h3>
-                <p class="mb-0">Conversion Rate</p>
-                <small>Orders / Product Views</small>
+        <div class="card text-center border-0 shadow-sm metric-card">
+            <div class="card-body bg-gradient" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="text-white">
+                    <i class="fas fa-percentage fa-2x mb-2 opacity-75"></i>
+                    <h3 class="mb-1">{{ conversion_rate|floatformat:1 }}%</h3>
+                    <p class="mb-2 fw-bold">Conversion Rate</p>
+                    <small class="opacity-75">Orders / Product Views</small>
+                </div>
             </div>
         </div>
     </div>
@@ -213,4 +252,28 @@ new Chart(statusCtx, {
     }
 });
 </script>
+
+<style>
+.metric-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.bg-gradient {
+    border-radius: 12px;
+}
+</style>
 {% endblock %}

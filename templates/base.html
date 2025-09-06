@@ -75,62 +75,150 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="{% static 'css/global.css' %}" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="{% static 'site_logo/a_la_livraison_logo.jpeg' %}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-                <img src="{% static 'site_logo/livriha.png' %}" alt="Livriha" height="40" class="me-2">
-                Livriha
+                <img src="{% static 'site_logo/livriha.png' %}" alt="Livriha" height="50" class="me-2" style="border-radius: 50%; object-fit: cover; width: 50px;">
+                <span class="d-none d-sm-inline">Livriha</span>
             </a>
             
-
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             
-
-            
-            <!-- Quick Search -->
-            <form class="d-flex me-3" method="get" action="{% url 'home' %}">
-                <input class="form-control me-2" type="search" name="search" placeholder="Search..." style="width: 200px;">
-                <button class="btn btn-outline-light" type="submit">Search</button>
-            </form>
-            
-            <div class="navbar-nav ms-auto">
-                <!-- Cart Icon -->
-                <a class="nav-link position-relative" href="{% url 'cart' %}">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count" style="display: none;">
-                        0
-                    </span>
-                </a>
-                
-                {% if user.is_authenticated %}
-                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                    <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-                    
-                    <!-- Notifications Dropdown -->
-                    <div class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-count" style="display: none;">
-                                0
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" style="width: 350px; max-height: 400px; overflow-y: auto;">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <div id="notification-list">
-                                <!-- Notifications will be loaded here -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Mobile Search & Filters -->
+                <form class="d-lg-none mt-2 mb-2" method="get" action="{% url 'home' %}">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input class="form-control" type="search" name="search" placeholder="Search products..." value="{{ search }}">
+                                <button class="btn btn-warning" type="submit"><i class="fas fa-search"></i></button>
                             </div>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center" href="#" onclick="markAllAsRead()">Mark all as read</a></li>
-                        </ul>
+                        </div>
+                        <div class="col-4">
+                            <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ min_price }}">
+                        </div>
+                        <div class="col-4">
+                            <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ max_price }}">
+                        </div>
+                        <div class="col-4">
+                            <select name="sort" class="form-select">
+                                <option value="random" {% if sort_by == 'random' %}selected{% endif %}>Random</option>
+                                <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>↑ Price</option>
+                                <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>↓ Price</option>
+                                <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>New</option>
+                                <option value="most_selling" {% if sort_by == 'most_selling' %}selected{% endif %}>Popular</option>
+                            </select>
+                        </div>
                     </div>
+                </form>
+                
+                <!-- Desktop Search & Filters -->
+                <form class="d-none d-lg-flex me-auto ms-3" method="get" action="{% url 'home' %}">
+                    <div class="input-group me-2">
+                        <input class="form-control" type="search" name="search" placeholder="Search..." value="{{ search }}" style="width: 200px;">
+                        <button class="btn btn-warning" type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                    <input type="number" name="min_price" class="form-control me-1" placeholder="Min" value="{{ min_price }}" style="width: 80px;">
+                    <input type="number" name="max_price" class="form-control me-1" placeholder="Max" value="{{ max_price }}" style="width: 80px;">
+                    <select name="sort" class="form-select" style="width: 120px;">
+                        <option value="random" {% if sort_by == 'random' %}selected{% endif %}>Random</option>
+                        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>↑ Price</option>
+                        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>↓ Price</option>
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>New</option>
+                        <option value="most_selling" {% if sort_by == 'most_selling' %}selected{% endif %}>Popular</option>
+                    </select>
+                </form>
+                
+                <div class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <a class="nav-link text-warning" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                        {% if user.email == 'protechdza@gmail.com' %}
+                            <a class="nav-link text-warning" href="{% url 'admin_shops' %}">
+                                <i class="fas fa-cog me-1"></i>Manage
+                            </a>
+                            <div class="nav-item dropdown">
+                                <a class="nav-link position-relative text-warning" href="#" id="supportDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-comments fa-lg"></i>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" id="support-count" style="display: none; font-size: 0.7rem;">0</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="width: 380px; max-height: 450px; border-radius: 12px;">
+                                    <div class="dropdown-header bg-primary text-white rounded-top" style="border-radius: 12px 12px 0 0; padding: 15px 20px;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 fw-bold"><i class="fas fa-comments me-2"></i>Live Support</h6>
+                                            <span class="badge bg-light text-primary" id="active-chats-count">0 active</span>
+                                        </div>
+                                    </div>
+                                    <div id="support-chat-list" style="max-height: 320px; overflow-y: auto; overflow-x: hidden; padding: 5px;"></div>
+                                    <div class="dropdown-footer border-top bg-light rounded-bottom" style="border-radius: 0 0 12px 12px; padding: 10px;">
+                                        <div class="d-grid gap-1">
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#broadcastModal">
+                                                <i class="fas fa-bullhorn me-1"></i>Send Broadcast
+                                            </button>
+                                            <a class="btn btn-sm btn-outline-primary" href="{% url 'support_messages' %}">
+                                                <i class="fas fa-envelope me-1"></i>View All Messages
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <a class="nav-link text-warning" href="{% url 'wishlist' %}">
+                            <i class="fas fa-heart me-1"></i>Wishlist
+                        </a>
+                        
+                        <!-- Notifications -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link position-relative text-warning" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell fa-lg"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-count" style="display: none; font-size: 0.7rem;">0</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="width: 350px; max-height: 400px; border-radius: 12px;">
+                                <div class="dropdown-header bg-light rounded-top" style="border-radius: 12px 12px 0 0; padding: 15px 20px;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-bell text-warning me-2"></i>Notifications</h6>
+                                        <small class="text-muted" id="notification-time">Just now</small>
+                                    </div>
+                                </div>
+                                <div id="notification-list" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;"></div>
+                                <div class="dropdown-footer border-top bg-light rounded-bottom" style="border-radius: 0 0 12px 12px; padding: 10px;">
+                                    <a class="btn btn-sm btn-outline-warning w-100" href="#" onclick="markAllAsRead()">
+                                        <i class="fas fa-check-double me-1"></i>Mark all as read
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a class="nav-link text-warning" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Always visible right-aligned items -->
+                <div class="navbar-nav ms-auto d-flex flex-row">
+                    <!-- Cart Icon -->
+                    <a class="nav-link position-relative px-2 text-center text-warning" href="{% url 'cart' %}">
+                        <i class="fas fa-shopping-cart me-1"></i>Cart
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count" style="display: none;">0</span>
+                    </a>
                     
-                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                {% else %}
-                    <a class="nav-link" href="{% url 'login' %}">Login</a>
-                    <a class="nav-link" href="{% url 'register' %}">Register</a>
-                {% endif %}
+                    {% if not user.is_authenticated %}
+                        <a class="nav-link px-2 text-center text-warning" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                        <a class="nav-link px-2 text-center text-warning" href="{% url 'register' %}">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
@@ -147,10 +235,90 @@
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'js/notifications.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}?v=789012"></script>
     <script src="{% static 'js/cart.js' %}"></script>
     
-
+    <!-- Floating Support Button -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <button class="btn btn-warning rounded-circle shadow" id="supportBtn" data-bs-toggle="modal" data-bs-target="#supportModal" style="width: 60px; height: 60px;">
+            <i class="fas fa-headset fa-lg"></i>
+        </button>
+    </div>
+    
+    <!-- Support Modal -->
+    <div class="modal fade" id="supportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark"><i class="fas fa-headset me-2"></i>Contact Support</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="supportForm">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        {% if not user.is_authenticated %}
+                        <!-- Form for unregistered users -->
+                        <div id="guestForm">
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Subject</label>
+                                <select class="form-select" name="subject" required>
+                                    <option value="">Select a topic</option>
+                                    <option value="General Question">General Question</option>
+                                    <option value="Technical Issue">Technical Issue</option>
+                                    <option value="Account Problem">Account Problem</option>
+                                    <option value="Payment Issue">Payment Issue</option>
+                                    <option value="Shop Management">Shop Management</option>
+                                    <option value="Product Issue">Product Issue</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea class="form-control" name="message" rows="4" placeholder="Describe your issue or question..." required></textarea>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Live Chat Area -->
+                        <div id="chatArea" {% if not user.is_authenticated %}style="display: none;"{% endif %}>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Live Support Chat</h6>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                            <div class="border rounded p-3 mb-3" style="height: 300px; overflow-y: auto; overflow-x: hidden; background: #f8f9fa; word-wrap: break-word;" id="chatMessages">
+                                {% if user.is_authenticated %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-comments fa-2x mb-2"></i>
+                                    <p>Welcome to live support! Type your message below.</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="chatInput" placeholder="Type your message...">
+                                <button type="button" class="btn btn-warning" id="sendChatBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" id="modalFooter">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        {% if not user.is_authenticated %}
+                        <button type="submit" class="btn btn-warning" id="submitBtn">Send Message</button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Initialize tooltips
@@ -160,6 +328,506 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
+        
+        let currentSupportId = null;
+        let chatInterval = null;
+        
+        // Initialize chat for registered users
+        {% if user.is_authenticated %}
+        document.getElementById('supportModal').addEventListener('shown.bs.modal', function() {
+            if (!currentSupportId) {
+                // Create or get existing chat session
+                fetch('{% url "get_or_create_chat" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentSupportId = data.support_id;
+                        loadChatMessages();
+                        chatInterval = setInterval(loadChatMessages, 2000);
+                    }
+                });
+            }
+        });
+        {% endif %}
+        
+        // Support form submission for guests
+        {% if not user.is_authenticated %}
+        document.getElementById('supportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            fetch('{% url "contact_support" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Message sent successfully! We\'ll get back to you via email.');
+                    bootstrap.Modal.getInstance(document.getElementById('supportModal')).hide();
+                    this.reset();
+                } else {
+                    alert('Error sending message. Please try again.');
+                }
+            })
+            .catch(error => {
+                alert('Error sending message. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        });
+        {% endif %}
+        
+
+        
+        // Chat input handlers for registered users
+        {% if user.is_authenticated %}
+        document.getElementById('sendChatBtn').addEventListener('click', sendChatMessage);
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+        {% endif %}
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            {% if user.is_authenticated %}
+            if (!currentSupportId) return;
+            
+            fetch('{% url "send_chat_message" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `support_id=${currentSupportId}&message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadChatMessages();
+                }
+            });
+            {% endif %}
+        }
+        
+        function loadChatMessages() {
+            if (!currentSupportId) return;
+            
+            fetch(`{% url "get_chat_messages" %}?support_id=${currentSupportId}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatDiv = document.getElementById('chatMessages');
+                chatDiv.innerHTML = '';
+                
+                data.messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `mb-2 ${msg.is_admin ? 'text-end' : 'text-start'}`;
+                    msgDiv.innerHTML = `
+                        <div class="d-inline-block p-2 rounded ${msg.is_admin ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 85%; word-wrap: break-word; word-break: break-word;">
+                            <small class="fw-bold">${msg.sender}</small><br>
+                            ${msg.message}
+                            <br><small class="${msg.is_admin ? 'text-light' : 'text-muted'}">${msg.time}</small>
+                        </div>
+                    `;
+                    chatDiv.appendChild(msgDiv);
+                });
+                
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            });
+        }
+        
+        // Clean up interval when modal closes
+        document.getElementById('supportModal').addEventListener('hidden.bs.modal', function() {
+            if (chatInterval) {
+                clearInterval(chatInterval);
+                chatInterval = null;
+            }
+            if (chatInterval) {
+                clearInterval(chatInterval);
+                chatInterval = null;
+            }
+            currentSupportId = null;
+            {% if not user.is_authenticated %}
+            document.getElementById('supportForm').reset();
+            {% endif %}
+        });
+        
+        // Admin support chat system
+        {% if user.email == 'protechdza@gmail.com' %}
+        let activeChatWindows = {};
+        
+        function loadSupportChats() {
+            fetch('{% url "get_support_chats" %}')
+            .then(response => response.json())
+            .then(data => {
+                const chatList = document.getElementById('support-chat-list');
+                const countBadge = document.getElementById('support-count');
+                
+                chatList.innerHTML = '';
+                
+                const activeChatsCount = document.getElementById('active-chats-count');
+                activeChatsCount.textContent = `${data.chats.length} active`;
+                
+                if (data.chats.length > 0) {
+                    countBadge.textContent = data.unread_count;
+                    countBadge.style.display = data.unread_count > 0 ? 'inline' : 'none';
+                    
+                    data.chats.forEach((chat, index) => {
+                        const chatItem = document.createElement('div');
+                        chatItem.className = 'chat-item';
+                        chatItem.innerHTML = `
+                            <div class="d-flex align-items-center p-3 hover-bg-light cursor-pointer border-bottom" onclick="openChatWindow(${chat.id}, '${chat.user}')" style="transition: all 0.2s ease;">
+                                <div class="position-relative me-3">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    <div class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 12px; height: 12px; border: 2px solid white;"></div>
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 fw-bold text-truncate">${chat.user}</h6>
+                                        ${chat.unread_count > 0 ? `<span class="badge bg-success rounded-pill" style="font-size: 0.7rem;">${chat.unread_count}</span>` : ''}
+                                    </div>
+                                    <p class="mb-0 text-muted small" style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2; max-height: 2.4em;">${chat.last_message}</p>
+                                    <small class="text-muted">Active now</small>
+                                </div>
+                            </div>
+                        `;
+                        chatList.appendChild(chatItem);
+                    });
+                } else {
+                    chatList.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No active chats</p>
+                            <small class="text-muted">New conversations will appear here</small>
+                        </div>
+                    `;
+                    countBadge.style.display = 'none';
+                }
+            });
+        }
+        
+        function openChatWindow(supportId, username) {
+            if (activeChatWindows[supportId]) {
+                return;
+            }
+            
+            const chatWindow = document.createElement('div');
+            chatWindow.className = 'position-fixed bg-white border rounded shadow';
+            chatWindow.style.cssText = `
+                bottom: 20px;
+                right: ${20 + Object.keys(activeChatWindows).length * 320}px;
+                width: 300px;
+                height: 400px;
+                z-index: 1060;
+            `;
+            
+            chatWindow.innerHTML = `
+                <div class="bg-primary text-white p-2 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">${username}</span>
+                    <button class="btn btn-sm btn-outline-light" onclick="closeChatWindow(${supportId})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-2" style="height: 300px; overflow-y: auto; overflow-x: hidden; background: #f8f9fa; word-wrap: break-word;" id="adminChatMessages-${supportId}">
+                </div>
+                <div class="p-2 border-top">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="adminChatInput-${supportId}" placeholder="Type message...">
+                        <button class="btn btn-primary" onclick="sendAdminMessage(${supportId})">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(chatWindow);
+            activeChatWindows[supportId] = chatWindow;
+            
+            loadAdminChatMessages(supportId);
+            
+            const interval = setInterval(() => {
+                if (activeChatWindows[supportId]) {
+                    loadAdminChatMessages(supportId);
+                } else {
+                    clearInterval(interval);
+                }
+            }, 2000);
+            
+            document.getElementById(`adminChatInput-${supportId}`).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendAdminMessage(supportId);
+                }
+            });
+        }
+        
+        function closeChatWindow(supportId) {
+            if (activeChatWindows[supportId]) {
+                activeChatWindows[supportId].remove();
+                delete activeChatWindows[supportId];
+            }
+        }
+        
+        function sendAdminMessage(supportId) {
+            const input = document.getElementById(`adminChatInput-${supportId}`);
+            const message = input.value.trim();
+            if (!message) return;
+            
+            fetch('{% url "send_chat_message" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `support_id=${supportId}&message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadAdminChatMessages(supportId);
+                }
+            });
+        }
+        
+        function loadAdminChatMessages(supportId) {
+            fetch(`{% url "get_chat_messages" %}?support_id=${supportId}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatDiv = document.getElementById(`adminChatMessages-${supportId}`);
+                if (!chatDiv) return;
+                
+                chatDiv.innerHTML = '';
+                
+                data.messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `mb-2 ${msg.is_admin ? 'text-end' : 'text-start'}`;
+                    msgDiv.innerHTML = `
+                        <div class="d-inline-block p-2 rounded ${msg.is_admin ? 'bg-primary text-white' : 'bg-light'} small" style="max-width: 85%; word-wrap: break-word; word-break: break-word;">
+                            ${msg.message}
+                            <br><small class="${msg.is_admin ? 'text-light' : 'text-muted'}">${msg.time}</small>
+                        </div>
+                    `;
+                    chatDiv.appendChild(msgDiv);
+                });
+                
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            });
+        }
+        
+        setInterval(loadSupportChats, 3000);
+        loadSupportChats();
+        {% endif %}
+        
+        // Broadcast form submission
+        {% if user.email == 'protechdza@gmail.com' %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const broadcastForm = document.getElementById('broadcastForm');
+            if (broadcastForm) {
+                broadcastForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Broadcast form submitted');
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Log form data
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            fetch('{% url "send_broadcast" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    alert(`Broadcast sent successfully to ${data.count} users!`);
+                    bootstrap.Modal.getInstance(document.getElementById('broadcastModal')).hide();
+                    this.reset();
+                    // Force reload notifications for all users
+                    if (typeof loadNotifications === 'function') {
+                        setTimeout(loadNotifications, 1000);
+                    }
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('Network error. Check console.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+                });
+            }
+        });
+        {% endif %}
     </script>
+    
+    <!-- Broadcast Modal -->
+    <div class="modal fade" id="broadcastModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark"><i class="fas fa-bullhorn me-2"></i>Send Broadcast Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="broadcastForm">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Message Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="broadcast_type" id="notification" value="notification" checked>
+                                <label class="form-check-label" for="notification">
+                                    <i class="fas fa-bell text-warning me-1"></i>In-App Notification
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="broadcast_type" id="email" value="email">
+                                <label class="form-check-label" for="email">
+                                    <i class="fas fa-envelope text-primary me-1"></i>Email Message
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" placeholder="Enter message title..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" name="message" rows="4" placeholder="Enter your message..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target Audience</label>
+                            <select class="form-select" name="target">
+                                <option value="all">All Users</option>
+                                <option value="sellers">Sellers Only</option>
+                                <option value="buyers">Buyers Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Send Broadcast</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    .hover-bg-light:hover {
+        background-color: rgba(0,123,255,0.05) !important;
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    .min-width-0 {
+        min-width: 0;
+    }
+    
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Hide scrollbars but keep functionality */
+    .dropdown-menu::-webkit-scrollbar,
+    #support-chat-list::-webkit-scrollbar,
+    #notification-list::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .dropdown-menu::-webkit-scrollbar-track,
+    #support-chat-list::-webkit-scrollbar-track,
+    #notification-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .dropdown-menu::-webkit-scrollbar-thumb,
+    #support-chat-list::-webkit-scrollbar-thumb,
+    #notification-list::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 2px;
+    }
+    
+    .dropdown-menu::-webkit-scrollbar-thumb:hover,
+    #support-chat-list::-webkit-scrollbar-thumb:hover,
+    #notification-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.3);
+    }
+    
+    .dropdown-menu {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        border: none;
+    }
+    
+    .chat-item:last-child .border-bottom {
+        border-bottom: none !important;
+    }
+    
+    .badge {
+        font-weight: 600;
+    }
+    
+    .dropdown-header {
+        border: none;
+        margin: 0;
+    }
+    
+    .dropdown-footer {
+        margin: 0;
+    }
+    
+    .nav-link {
+        transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+        transform: translateY(-1px);
+    }
+    </style>
 </body>
 </html>

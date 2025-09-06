@@ -8,7 +8,7 @@
             <div class="list-group">
                 <a href="{% url 'product_list' %}" class="list-group-item {% if not selected_category %}active{% endif %}">All Products</a>
                 {% for category in categories %}
-                <a href="?category={{ category.id }}" class="list-group-item {% if selected_category == category.id %}active{% endif %}">{{ category.name }}</a>
+                <a href="?category={{ category.name }}" class="list-group-item {% if selected_category == category.name %}active{% endif %}">{{ category.name }}</a>
                 {% endfor %}
             </div>
         </div>
@@ -16,10 +16,15 @@
         <div class="col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2>Products</h2>
-                <form method="get" class="d-flex">
-                    <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
-                    <button type="submit" class="btn btn-outline-primary">Search</button>
-                </form>
+                <div class="d-flex gap-2">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'add_product' %}" class="btn btn-success">Add Product</a>
+                    {% endif %}
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-primary">Search</button>
+                    </form>
+                </div>
             </div>
             
             <div class="row">
@@ -27,7 +32,7 @@
                 <div class="col-md-4 mb-4">
                     <div class="card">
                         {% if product.images.exists %}
-                            <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 200px; object-fit: contain; background: #f8f9fa;">
                         {% else %}
                             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <span class="text-muted">No Image</span>
@@ -36,6 +41,16 @@
                         
                         <div class="card-body">
                             <h6 class="card-title">{{ product.name }}</h6>
+                            <div class="mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= product.sales_rating %}
+                                        <span class="text-warning">★</span>
+                                    {% else %}
+                                        <span class="text-muted">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <small class="text-muted">({{ product.sales_count }} sold)</small>
+                            </div>
                             <p class="card-text text-truncate">{{ product.description }}</p>
                             
                             <div class="d-flex justify-content-between align-items-center">
@@ -48,11 +63,24 @@
                                     {% endif %}
                                 </div>
                                 
-                                <div class="btn-group">
-                                    <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                                    {% if user.is_authenticated %}
-                                        <button class="btn btn-sm btn-outline-success" onclick="addToCart({{ product.id }})">Cart</button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="addToWishlist({{ product.id }})">♡</button>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'product_detail' product.id }}" class="btn btn-sm btn-primary flex-fill">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    {% if user.is_authenticated and product.shop.owner == user %}
+                                        <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    {% elif user.is_authenticated %}
+                                        <button class="btn btn-sm btn-success" onclick="addToCart({{ product.id }})">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="addToWishlist({{ product.id }})">
+                                            <i class="fas fa-heart"></i>
+                                        </button>
                                     {% endif %}
                                 </div>
                             </div>

@@ -5,7 +5,8 @@ from orders.models import OrderItem
 import random
 
 def home(request):
-    products = Product.objects.select_related('shop').all()
+    # Only show products from active shops
+    products = Product.objects.select_related('shop').filter(shop__is_active=True)
     
     # Search functionality
     search = request.GET.get('search')

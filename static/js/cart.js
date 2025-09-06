@@ -1,19 +1,7 @@
 // Cart management functions
 function updateCartCount() {
-    fetch('/products/api/cart-count/')
-        .then(response => response.json())
-        .then(data => {
-            const cartCount = document.getElementById('cart-count');
-            if (cartCount) {
-                cartCount.textContent = data.count;
-                if (data.count > 0) {
-                    cartCount.style.display = 'inline-block';
-                } else {
-                    cartCount.style.display = 'none';
-                }
-            }
-        })
-        .catch(error => console.error('Error updating cart count:', error));
+    // Skip cart count update for now to avoid 404 errors
+    return;
 }
 
 // Update cart count on page load

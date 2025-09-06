@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dyrnnp0zmdpwgvoi7p2k4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['livriha.store', 'web-production-a25f3.up.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['livriha.store', 'web-production-a25f3.up.railway.app', 'localhost', '127.0.0.1', '192.168.224.163']
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [

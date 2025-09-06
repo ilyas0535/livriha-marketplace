@@ -10,19 +10,12 @@
             <div>
                 <h1>{{ shop.name }}</h1>
                 <p class="text-muted">{{ shop.description }}</p>
-                {% if shop.average_rating > 0 %}
-                    <div class="text-warning mb-2">
-                        <small class="text-muted">[{{ shop.average_rating }}]</small>
-                        {% for i in "12345" %}
-                            {% if forloop.counter <= shop.average_rating %}
-                                <i class="fas fa-star"></i>
-                            {% else %}
-                                <i class="far fa-star"></i>
-                            {% endif %}
-                        {% endfor %}
-                        <small class="text-muted">({{ shop.rating_count }} reviews)</small>
-                    </div>
-                {% endif %}
+                <div class="text-warning mb-2">
+                    {% for i in "12345" %}
+                        <i class="{% if forloop.counter <= shop.sales_rating %}fas{% else %}far{% endif %} fa-star"></i>
+                    {% endfor %}
+                    <small class="text-muted">({{ shop.sales_count }} sold)</small>
+                </div>
             </div>
         </div>
     </div>
@@ -34,23 +27,17 @@
     <div class="col-md-4 mb-4">
         <div class="card">
             {% if product.images.first %}
-                <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                <img src="{{ product.images.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: contain; background: #f8f9fa;">
             {% endif %}
             <div class="card-body">
                 <h5 class="card-title"><a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">{{ product.name }}</a></h5>
                 <p class="card-text">{{ product.description|truncatewords:15 }}</p>
-                {% if product.average_rating > 0 %}
-                    <div class="text-warning mb-2">
-                        {% for i in "12345" %}
-                            {% if forloop.counter <= product.average_rating %}
-                                <i class="fas fa-star" style="font-size: 14px;"></i>
-                            {% else %}
-                                <i class="far fa-star" style="font-size: 14px;"></i>
-                            {% endif %}
-                        {% endfor %}
-                        <small class="text-muted">({{ product.rating_count }})</small>
-                    </div>
-                {% endif %}
+                <div class="text-warning mb-2">
+                    {% for i in "12345" %}
+                        <i class="{% if forloop.counter <= product.sales_rating %}fas{% else %}far{% endif %} fa-star" style="font-size: 14px;"></i>
+                    {% endfor %}
+                    <small class="text-muted">({{ product.sales_count }} sold)</small>
+                </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         {% if product.is_on_sale %}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, ProductVariant, Cart, CartItem, Wishlist, ProductRating, ShopRating
+from .models import Category, Product, ProductImage, ProductVariant, Cart, CartItem, Wishlist
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
@@ -24,12 +24,3 @@ admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(Wishlist)
 
-@admin.register(ProductRating)
-class ProductRatingAdmin(admin.ModelAdmin):
-    list_display = ['user', 'product', 'rating', 'created_at']
-    list_filter = ['rating', 'created_at']
-
-@admin.register(ShopRating)
-class ShopRatingAdmin(admin.ModelAdmin):
-    list_display = ['user', 'shop', 'rating', 'created_at']
-    list_filter = ['rating', 'created_at']

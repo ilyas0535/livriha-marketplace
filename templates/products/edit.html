@@ -1,99 +1,76 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <h2>Edit Product</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">Product Name</label>
-                <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="4" required>{{ product.description }}</textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Price ($)</label>
-                        <input type="number" name="price" class="form-control" step="0.01" value="{{ product.price }}" required>
-                    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Edit Product: {{ product.name }}</h4>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Old Price ($ - for discounts)</label>
-                        <input type="number" name="old_price" class="form-control" step="0.01" value="{{ product.old_price|default:'' }}">
-                    </div>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Quantity</label>
-                <input type="number" name="quantity" class="form-control" value="{{ product.quantity }}" required>
-            </div>
-        </form>
-        
-        <!-- Current Images -->
-        <div class="mb-4">
-            <h5>Current Images</h5>
-            <div class="row">
-                {% for image in product.images.all %}
-                <div class="col-md-3 mb-3">
-                    <div class="card">
-                        <img src="{{ image.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer;" onclick="openSingleImage('{{ image.image.url }}');">
-                        <div class="card-body p-2">
-                            <form method="post" action="{% url 'delete_product_image' image.id %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Delete this image?')">Delete</button>
-                            </form>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Product Name</label>
+                            {{ form.name }}
                         </div>
-                    </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            {{ form.category }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Price ($)</label>
+                                    {{ form.price }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Old Price ($) - Optional</label>
+                                    {{ form.old_price }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quantity</label>
+                                    {{ form.quantity }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Low Stock Alert</label>
+                                    {{ form.low_stock_threshold }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Add More Images</label>
+                            {{ form.images }}
+                            <div class="form-text">{{ form.images.help_text }}</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Product</button>
+                        </div>
+                    </form>
                 </div>
-                {% empty %}
-                <p class="text-muted">No images uploaded yet.</p>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Add New Images -->
-        <form method="post" enctype="multipart/form-data" action="{% url 'add_product_images' product.id %}">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">Add New Images</label>
-                <input type="file" name="images" class="form-control" accept="image/*" multiple>
-                <small class="form-text text-muted">You can select multiple images</small>
-            </div>
-            <button type="submit" class="btn btn-success">Add Images</button>
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'manage_products' %}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Update Product</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Single Image Modal -->
-<div class="modal fade" id="singleImageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Product Image</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <img id="singleModalImage" class="w-100" style="max-height: 70vh; object-fit: contain;">
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function openSingleImage(imageSrc) {
-    document.getElementById('singleModalImage').src = imageSrc;
-    const modal = new bootstrap.Modal(document.getElementById('singleImageModal'));
-    modal.show();
-}
-</script>
-
 {% endblock %}

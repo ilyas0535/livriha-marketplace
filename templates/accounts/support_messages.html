@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-envelope text-warning me-2"></i>Support Messages</h2>
+    <span class="badge bg-warning text-dark fs-6">{{ support_messages.count }} Messages</span>
+</div>
+
+<div class="row">
+    {% for message in support_messages %}
+    <div class="col-12 mb-3">
+        <div class="card {% if not message.is_read %}border-warning{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">{{ message.subject }}</h6>
+                    <small class="text-muted">From: {{ message.name }} ({{ message.email }})</small>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">{{ message.created_at|date:"M d, Y H:i" }}</small>
+                    {% if not message.is_read %}
+                        <span class="badge bg-warning text-dark ms-2">New</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">{{ message.message }}</p>
+                {% if message.user %}
+                    <small class="text-muted">User: {{ message.user.username }}</small>
+                {% else %}
+                    <small class="text-muted">Anonymous user</small>
+                {% endif %}
+                
+                <div class="mt-2 d-flex gap-2">
+                    {% if not message.is_read %}
+                        <a href="?mark_read={{ message.id }}" class="btn btn-sm btn-warning">Mark as Read</a>
+                    {% endif %}
+                    {% if message.user %}
+                        <button class="btn btn-sm btn-primary" onclick="replyToUser({{ message.id }}, '{{ message.user.username }}')">
+                            <i class="fas fa-reply me-1"></i>Reply
+                        </button>
+                    {% else %}
+                        <a href="mailto:{{ message.email }}?subject=Re: {{ message.subject }}&body=Hello {{ message.name }},%0A%0AThank you for contacting us.%0A%0A" class="btn btn-sm btn-success">
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No support messages yet</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-reply me-2"></i>Reply to Support Message</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="replyForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="replyMessageId" name="message_id">
+                    <div class="mb-3">
+                        <label class="form-label">Replying to:</label>
+                        <div id="replyToUser" class="fw-bold text-primary"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Your Reply</label>
+                        <textarea class="form-control" name="reply" rows="4" placeholder="Type your reply here..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function replyToUser(messageId, username) {
+    document.getElementById('replyMessageId').value = messageId;
+    document.getElementById('replyToUser').textContent = username;
+    new bootstrap.Modal(document.getElementById('replyModal')).show();
+}
+
+document.getElementById('replyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    
+    fetch('{% url "reply_support" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Reply sent successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+            this.reset();
+            location.reload();
+        } else {
+            alert('Error sending reply. Please try again.');
+        }
+    })
+    .catch(error => {
+        alert('Error sending reply. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    });
+});
+</script>
+{% endblock %}

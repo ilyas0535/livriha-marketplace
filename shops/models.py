@@ -36,6 +36,7 @@ class Shop(models.Model):
     order_reminder_period = models.CharField(max_length=3, choices=REMINDER_PERIODS, default='1d')
     
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -55,16 +56,43 @@ class Shop(models.Model):
         return f'/shop/{self.slug}/'
     
     @property
-    def average_rating(self):
-        from products.models import ShopRating
-        ratings = ShopRating.objects.filter(shop=self)
-        if ratings.exists():
-            total = sum(r.rating for r in ratings)
-            count = ratings.count()
-            return round(total / count)
-        return 0
+    def sales_rating(self):
+        from orders.models import OrderItem
+        from django.db.models import Sum
+        
+        # Get all shops with their sales, ordered by sales descending
+        all_shops = Shop.objects.annotate(
+            total_sales=Sum('product__orderitem__quantity')
+        ).order_by('-total_sales')
+        
+        total_shops = all_shops.count()
+        if total_shops == 0:
+            return 1
+        
+        # Find this shop's rank (1-based)
+        shop_rank = 1
+        for i, shop in enumerate(all_shops, 1):
+            if shop.id == self.id:
+                shop_rank = i
+                break
+        
+        # Convert rank to 5-star rating (rank 1 = best = 5 stars)
+        # Calculate which quintile this shop falls into
+        quintile_size = max(1, total_shops // 5)
+        
+        if shop_rank <= quintile_size:  # Top quintile
+            return 5
+        elif shop_rank <= quintile_size * 2:  # Second quintile
+            return 4
+        elif shop_rank <= quintile_size * 3:  # Third quintile
+            return 3
+        elif shop_rank <= quintile_size * 4:  # Fourth quintile
+            return 2
+        else:  # Bottom quintile
+            return 1
     
     @property
-    def rating_count(self):
-        from products.models import ShopRating
-        return ShopRating.objects.filter(shop=self).count()
+    def sales_count(self):
+        from orders.models import OrderItem
+        from django.db.models import Sum
+        return OrderItem.objects.filter(product__shop=self).aggregate(total=Sum('quantity'))['total'] or 0

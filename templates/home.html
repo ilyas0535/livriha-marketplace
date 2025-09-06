@@ -2,63 +2,35 @@
 
 {% block content %}
 {% csrf_token %}
-<!-- Hero Section -->
-<div class="hero-section bg-gradient text-white text-center py-5 mb-5 rounded">
+
+
+
+
+<!-- Featured Collections -->
+<div id="products" class="py-3 bg-light">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-3">Welcome to Livriha</h1>
-        <p class="lead mb-4">Your Ultimate Multi-Vendor Marketplace</p>
-        <p class="fs-5 mb-4">Discover amazing products from trusted sellers worldwide. Shop with confidence, sell with ease.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="#products" class="btn btn-light btn-lg px-4">Start Shopping</a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-1">🔥 Trending Now</h4>
+                <small class="text-muted">Handpicked products just for you</small>
+            </div>
+            
             {% if not user.is_authenticated %}
-                <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-4">Join as Seller</a>
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="{% url 'login' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-1"></i>Log In
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-warning">
+                    <i class="fas fa-user-plus me-1"></i>Join Now
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Search and Filter Section -->
-<div class="search-section bg-light p-4 rounded mb-5">
-    <h3 class="text-center mb-4"><i class="fas fa-search me-2"></i>Find Your Perfect Product</h3>
-    <form method="get" class="row g-3">
-        <div class="col-md-4">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" name="search" class="form-control" placeholder="Search products, shops..." value="{{ search }}">
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ min_price }}" step="0.01">
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ max_price }}" step="0.01">
-            </div>
-        </div>
-        <div class="col-md-2">
-            <select name="sort" class="form-select">
-                <option value="random" {% if sort_by == 'random' %}selected{% endif %}>🎲 Random</option>
-                <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>💰 Price: Low to High</option>
-                <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>💎 Price: High to Low</option>
-                <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>🆕 Newest First</option>
-                <option value="most_selling" {% if sort_by == 'most_selling' %}selected{% endif %}>🔥 Most Selling</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i>Filter</button>
-        </div>
-    </form>
-</div>
-
-<!-- Products Section -->
-<div id="products" class="mb-4">
-    <h2 class="text-center mb-4"><i class="fas fa-shopping-bag me-2"></i>Featured Products</h2>
-</div>
-<div class="row">
+<div class="container">
+    <div class="row g-2">
     {% for product in products %}
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm product-card">
@@ -67,7 +39,7 @@
                     <div class="carousel-inner">
                         {% for image in product.images.all %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ image.image.url }}" class="d-block w-100" style="height: 250px; object-fit: cover; cursor: pointer;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})">
+                            <img src="{{ image.image.url }}" class="d-block w-100" style="height: 140px; object-fit: contain; cursor: pointer; background: #f8f9fa;" onclick="openImageModal({{ product.id }}, {{ forloop.counter0 }})">
                         </div>
                         {% endfor %}
                     </div>
@@ -81,23 +53,14 @@
                     {% endif %}
                 </div>
             {% endif %}
-            <div class="card-body">
-                <h5 class="card-title"><a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">{{ product.name }}</a></h5>
-                <p class="card-text">{{ product.description|truncatewords:20 }}</p>
+            <div class="card-body p-2">
+                <h6 class="card-title mb-1 small"><a href="{% url 'product_detail' product.id %}" class="text-decoration-none text-dark">{{ product.name|truncatechars:25 }}</a></h6>
                 <div class="mb-2">
                     <div class="text-warning">
-                        {% if user.is_authenticated and user.shop != product.shop %}
-                            {% for i in "12345" %}
-                                <i class="{% if forloop.counter <= product.average_rating %}fas{% else %}far{% endif %} fa-star" 
-                                   style="font-size: 14px; cursor: pointer;" 
-                                   onclick="rateProduct({{ product.id }}, {{ forloop.counter }})"></i>
-                            {% endfor %}
-                        {% else %}
-                            {% for i in "12345" %}
-                                <i class="{% if forloop.counter <= product.average_rating %}fas{% else %}far{% endif %} fa-star" style="font-size: 14px;"></i>
-                            {% endfor %}
-                        {% endif %}
-                        {% if product.rating_count > 0 %}<small class="text-muted">({{ product.rating_count }})</small>{% endif %}
+                        {% for i in "12345" %}
+                            <i class="{% if forloop.counter <= product.sales_rating %}fas{% else %}far{% endif %} fa-star" style="font-size: 14px;"></i>
+                        {% endfor %}
+                        <small class="text-muted">({{ product.sales_count }} sold)</small>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
@@ -112,18 +75,10 @@
                     <div class="text-end">
                         <small class="text-muted d-block"><a href="{{ product.shop.get_absolute_url }}" class="text-decoration-none">{{ product.shop.name }}</a></small>
                         <div class="text-warning small">
-                            <small class="text-muted">[{{ product.shop.average_rating }}]</small>
-                            {% if user.is_authenticated and user.shop != product.shop %}
-                                {% for i in "12345" %}
-                                    <i class="{% if forloop.counter <= product.shop.average_rating %}fas{% else %}far{% endif %} fa-star" 
-                                       style="font-size: 12px; cursor: pointer;" 
-                                       onclick="rateShop({{ product.shop.id }}, {{ forloop.counter }})"></i>
-                                {% endfor %}
-                            {% else %}
-                                {% for i in "12345" %}
-                                    <i class="{% if forloop.counter <= product.shop.average_rating %}fas{% else %}far{% endif %} fa-star" style="font-size: 12px;"></i>
-                                {% endfor %}
-                            {% endif %}
+                            {% for i in "12345" %}
+                                <i class="{% if forloop.counter <= product.shop.sales_rating %}fas{% else %}far{% endif %} fa-star" style="font-size: 12px;"></i>
+                            {% endfor %}
+                            <small class="text-muted">({{ product.shop.sales_count }} sold)</small>
                         </div>
                     </div>
                 </div>
@@ -133,9 +88,13 @@
                     {% elif product.is_out_of_stock %}
                         <span class="badge bg-danger">Out of Stock</span>
                     {% else %}
-                        <div class="d-flex gap-1 mb-2">
-                            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary btn-sm">Add to Cart</a>
-                            <a href="{% url 'buy_now' product.id %}" class="btn btn-success btn-sm">Buy Now</a>
+                        <div class="d-grid gap-1 d-md-flex">
+                            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                            </a>
+                            <a href="{% url 'buy_now' product.id %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-bolt me-1"></i>Buy Now
+                            </a>
                         </div>
                     {% endif %}
                     {% if user.is_authenticated and user.shop != product.shop %}
@@ -157,6 +116,42 @@
         {% endif %}
     </div>
     {% endfor %}
+    </div>
+</div>
+
+<!-- Quick Actions Section -->
+<div class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center p-4 border rounded-3 h-100 hover-lift">
+                    <div class="mb-3">
+                        <i class="fas fa-shipping-fast fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold">Fast Delivery</h5>
+                    <p class="text-muted mb-0">Quick and reliable shipping worldwide</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4 border rounded-3 h-100 hover-lift">
+                    <div class="mb-3">
+                        <i class="fas fa-shield-alt fa-3x text-success"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Payment</h5>
+                    <p class="text-muted mb-0">100% secure and trusted transactions</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4 border rounded-3 h-100 hover-lift">
+                    <div class="mb-3">
+                        <i class="fas fa-headset fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="fw-bold">24/7 Support</h5>
+                    <p class="text-muted mb-0">Always here to help you succeed</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -238,11 +233,43 @@ function rateShop(shopId, rating) {
 
 <style>
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    min-height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 20vh;
     display: flex;
     align-items: center;
+}
+
+.livriha-logo {
+    display: inline-flex;
+    align-items: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.logo-icon::before {
+    content: '🛍️';
+    font-size: 20px;
+}
+
+.logo-text {
+    background: linear-gradient(45deg, #ffd700, #ffffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .search-section {
@@ -258,6 +285,25 @@ function rateShop(shopId, rating) {
 .product-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    transition: transform 0.3s ease;
+}
+
+.btn-group .btn {
+    border-radius: 25px !important;
+}
+
+.btn-group .btn:first-child {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.btn-group .btn:last-child {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
 }
 
 .btn {

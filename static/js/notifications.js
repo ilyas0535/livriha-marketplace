@@ -8,26 +8,12 @@ function loadNotifications() {
             return response.json();
         })
         .then(data => {
-            // Check for new notifications
-            if (data.unread_count > previousNotificationCount && previousNotificationCount > 0) {
-                // Find new notifications
-                const newNotifications = data.notifications.filter(n => !n.is_read).slice(0, data.unread_count - previousNotificationCount);
-                newNotifications.forEach(notification => {
-                    showBrowserNotification(notification.title, notification.message);
-                });
-            }
-            
-            previousNotificationCount = data.unread_count;
+            console.log('Notifications loaded:', data);
             updateNotificationCount(data.unread_count);
             displayNotifications(data.notifications);
         })
         .catch(error => {
             console.error('Error loading notifications:', error);
-            // Hide notification count if there's an error
-            const notificationCount = document.getElementById('notification-count');
-            if (notificationCount) {
-                notificationCount.style.display = 'none';
-            }
         });
 }
 
@@ -121,35 +107,11 @@ function markAllAsRead() {
     .catch(error => console.error('Error marking all notifications as read:', error));
 }
 
-// Request notification permission
-function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
-}
-
-// Show browser notification
-function showBrowserNotification(title, message) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, {
-            body: message,
-            icon: '/static/favicon.ico',
-            badge: '/static/favicon.ico'
-        });
-    }
-}
-
-// Track previous notification count
-let previousNotificationCount = 0;
-
 // Load notifications on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Only load notifications if user is authenticated and notification elements exist
     if (document.getElementById('notification-count') && document.getElementById('notification-list')) {
-        requestNotificationPermission();
+        console.log('Loading notifications...');
         loadNotifications();
-        
-        // Refresh notifications every 30 seconds
-        setInterval(loadNotifications, 30000);
+        setInterval(loadNotifications, 5000);
     }
 });

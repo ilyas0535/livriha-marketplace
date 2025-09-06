@@ -5,13 +5,6 @@ from .models import Notification
 
 @login_required
 def get_notifications(request):
-    # Both sellers and buyers can get notifications
-    if not request.user.is_seller and not request.user.is_buyer:
-        return JsonResponse({
-            'notifications': [],
-            'unread_count': 0
-        })
-    
     all_notifications = Notification.objects.filter(user=request.user)
     unread_count = all_notifications.filter(is_read=False).count()
     notifications = all_notifications.order_by('-created_at')[:10]
